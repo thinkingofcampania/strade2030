@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Strade 2030 · La sfida dei clan della Campania</title>
-<meta name="description" content="La sfida dei clan scout della Campania sui 17 obiettivi dell'Agenda 2030.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>">
+<title>Strade 2030 · Thinking of Campania</title>
+<meta name="description" content="Thinking of Campania. Il domani è oggi. Strade 2030: la sfida dei clan R/S della Campania sui 17 obiettivi dell'Agenda 2030.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚜️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -33,7 +33,7 @@
 <script src="assets/goals.js"></script>
 <script src="assets/common.js"></script>
 <script>
-$("#brand").innerHTML = BRAND + `<div><b>Strade 2030</b><small>La sfida dei clan della Campania</small></div>`;
+$("#brand").innerHTML = BRAND + `<div><b>Strade 2030</b><small>Thinking of Campania · Il domani è oggi</small></div>`;
 
 let sb = null;
 const S = { session:null, clan:null, answers:{}, subs:{}, evals:{}, board:[], tab:"map",
@@ -116,8 +116,12 @@ function render(){
 function renderAuth(){
   const reg = S.authMode==="register";
   $("#app").innerHTML = `
+  <div class="auth-grid">
+  <figure class="poster"><img src="assets/img/thinking-of-campania.jpg" alt="Thinking of Campania. Il domani è oggi" width="900" height="900"></figure>
   <div class="reg">
-    <h1>Diciassette strade, un solo territorio.</h1>
+    <p class="kicker">Thinking of Campania · Il domani è oggi</p>
+    <h1>Strade 2030</h1>
+    <p class="claim">Diciassette strade, un solo territorio.</p>
     <p class="muted">Ogni obiettivo dell'Agenda 2030 vi aspetta con due sfide: una domanda sul mondo e una missione da compiere nel vostro paese.</p>
     <div class="seg" role="group">
       <button data-mode="register" aria-pressed="${reg}">Registra il clan</button>
@@ -139,6 +143,7 @@ function renderAuth(){
       <p class="muted" style="margin:0;font-size:14px">Codice o password dimenticati? Scrivete all'organizzazione regionale: possono recuperarli.</p>`}
       <p class="err hidden" id="authErr"></p>
     </form>
+  </div>
   </div>`;
   document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{S.authMode=b.dataset.mode;renderAuth();});
   $("#authForm").addEventListener("submit", e=>{ e.preventDefault(); reg ? doRegister(e.submitter) : doLogin(e.submitter); });
@@ -237,6 +242,7 @@ function tileMarks(n){
 function renderMap(){
   const c=S.clan, t=tally();
   $("#app").innerHTML = `<section class="hero">
+    <p class="kicker">Strade 2030 · Thinking of Campania</p>
     <h1>Scegliete la vostra prossima tappa.</h1>
     <div class="clan-line"><span class="chip">${esc(c.name)}</span><span class="chip soft">${esc(c.city)}${c.grp?", "+esc(c.grp):""}</span><span class="chip soft">Codice ${esc(c.code)}</span><span class="chip soft">${t.done} missioni locali valutate su 17</span></div>
   </section>
@@ -384,7 +390,7 @@ async function submitLocal(n,btn){
 function renderBoard(){
   const rows=S.board, max=Math.max(1,...rows.map(r=>r.totale));
   let pos=0, prev=null;
-  $("#app").innerHTML = `<section class="hero"><h1>Classifica dei clan</h1><p>${rows.length} clan in cammino. I punti delle sfide locali compaiono appena la commissione le valuta.</p></section>
+  $("#app").innerHTML = `<section class="hero"><p class="kicker">Strade 2030 · Il domani è oggi</p><h1>Classifica dei clan</h1><p>${rows.length} clan in cammino. I punti delle sfide locali compaiono appena la commissione le valuta.</p></section>
    <div class="panel" style="margin-bottom:60px">
     ${rows.length?`<ol class="lb">${rows.map((r,i)=>{ if(r.totale!==prev){pos=i+1;prev=r.totale;}
       const me=r.clan_id===uid();
@@ -398,7 +404,7 @@ function renderBoard(){
 
 /* ---------- Regole ---------- */
 function renderRules(){
-  $("#app").innerHTML = `<section class="hero"><h1>Come funziona</h1><p>Ogni obiettivo è una tappa con due sfide. Potete affrontarle nell'ordine che volete e in quanto tempo volete.</p></section>
+  $("#app").innerHTML = `<section class="hero"><p class="kicker">Strade 2030 · Thinking of Campania</p><h1>Come funziona</h1><p>Ogni obiettivo è una tappa con due sfide. Potete affrontarle nell'ordine che volete e in quanto tempo volete.</p></section>
   <div class="rules" style="padding-bottom:60px">
     <div class="panel"><span class="big">${PTS_GLOBAL}</span><h3>Sfida globale</h3><p>Una domanda precisa sul tema dell'obiettivo. Un solo tentativo: risposta giusta, ${PTS_GLOBAL} punti; sbagliata, zero. Studiate e confrontatevi prima di confermare.</p></div>
     <div class="panel"><span class="big">${LOCAL_MAX}</span><h3>Sfida locale</h3><p>Una missione da compiere sul vostro territorio. Inviate racconto e prove; la commissione assegna da 0 a ${PTS_CRIT_MAX} punti per ciascun criterio:</p><ul class="deliver">${CRITERIA.map(c=>`<li><b>${c.t}</b>: ${c.h}</li>`).join("")}</ul></div>

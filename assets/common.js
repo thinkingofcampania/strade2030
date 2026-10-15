@@ -11,4 +11,6 @@ function linksHtml(links){
   return ok.length ? `<ul class="linklist">${ok.map(u=>`<li><a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(u)}</a></li>`).join("")}</ul>` : "";
 }
 function fatal(msg){ $("#app").innerHTML = `<div class="reg"><h1>Strade 2030</h1><p class="notice">${esc(msg)}</p></div>`; }
-const BRAND = `<svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 3 L30 30 L4 30 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M11 30 L17 18 L23 30" fill="var(--kerchief)"/></svg>`;
+/* Loghi in alto a sinistra: metti i file in assets/img/ con questi nomi esatti.
+   Se un file manca, il logo semplicemente non compare. */
+const BRAND = `<span class="logos"><img src="assets/img/logo-agesci.png" alt="AGESCI" onerror="this.remove()"><img src="assets/img/logo-rs.png" alt="Branca R/S" onerror="this.remove()"></span>`;
