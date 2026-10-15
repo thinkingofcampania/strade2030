@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Strade 2030 · Commissione</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand" id="brand"></div>
+    <nav class="tabs hidden" id="tabs" role="tablist">
+      <button role="tab" data-view="eval" aria-selected="true">Prove</button>
+      <button role="tab" data-view="clans" aria-selected="false">Clan</button>
+    </nav>
+    <button class="btn ghost small hidden" id="refresh">Aggiorna</button>
+    <button class="btn ghost small hidden" id="logout">Esci</button>
+  </div>
+</header>
+<main class="wrap" id="app"><p class="muted" style="padding:60px 0">Caricamento…</p></main>
+<div class="toast hidden" id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="assets/goals.js"></script>
+<script src="assets/common.js"></script>
+<script>
+$("#brand").innerHTML = BRAND + `<div><b>Strade 2030</b><small>Area della commissione</small></div>`;
+let sb=null;
+const S={ session:null, clans:{}, subs:[], evals:{}, board:[], view:"eval", filter:"pending", goalFilter:0, urls:{} };
+const key=(c,g)=>c+"|"+g;
+
+(async function init(){
+  if(!isConfigured()) return fatal("L'app non è ancora collegata al database. Segui il passo 3 del file LEGGIMI.");
+  sb=makeClient();
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session){ S.session=session; await enter(); } else renderLogin();
+})();
+
+function renderLogin(msg){
+  $("#app").innerHTML = `<div class="reg"><h1>Area della commissione</h1>
+   <p class="muted">Accesso riservato agli organizzatori.</p>
+   <form id="lf" class="panel stack" style="margin-top:20px">
+     <label class="f">Email<input type="email" id="em" required autocomplete="username"></label>
+     <label class="f">Password<input type="password" id="pw" required autocomplete="current-password"></label>
+     <button class="btn" type="submit">Entra</button>
+     <p class="err ${msg?"":"hidden"}" id="le">${esc(msg||"")}</p>
+   </form></div>`;
+  $("#lf").addEventListener("submit", async e=>{
+    e.preventDefault(); e.submitter.disabled=true;
+    const { data, error } = await sb.auth.signInWithPassword({ email:$("#em").value.trim(), password:$("#pw").value });
+    if(error){ e.submitter.disabled=false; const p=$("#le"); p.textContent="Email o password non corretti."; p.classList.remove("hidden"); return; }
+    S.session=data.session; await enter();
+  });
+}
+
+async function enter(){
+  const { data:isAdm } = await sb.rpc("is_admin");
+  if(!isAdm){ await sb.auth.signOut(); return renderLogin("Questo account non fa parte della commissione."); }
+  ["#tabs","#refresh","#logout"].forEach(s=>$(s).classList.remove("hidden"));
+  await loadAll();
+}
+
+async function loadAll(){
+  const [c,s,e,b] = await Promise.all([
+    sb.from("clans").select("*"),
+    sb.from("submissions").select("*").order("updated_at",{ascending:true}),
+    sb.from("evaluations").select("*"),
+    sb.rpc("classifica")
+  ]);
+  const bad=[c,s,e,b].find(r=>r.error); if(bad){ console.error(bad.error); toast("Errore nel caricamento dei dati."); }
+  S.clans=Object.fromEntries((c.data||[]).map(r=>[r.id,r]));
+  S.subs=s.data||[];
+  S.evals=Object.fromEntries((e.data||[]).map(r=>[key(r.clan_id,r.goal),r]));
+  S.board=b.data||[];
+  render();
+}
+
+$("#refresh").onclick=()=>loadAll().then(()=>toast("Dati aggiornati"));
+$("#logout").onclick=async()=>{ await sb.auth.signOut(); location.reload(); };
+document.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>{ S.view=b.dataset.view; render(); });
+
+function render(){
+  document.querySelectorAll("[data-view]").forEach(b=>b.setAttribute("aria-selected", b.dataset.view===S.view));
+  S.view==="clans" ? renderClans() : renderEval();
+}
+
+/* ---------- Prove da valutare ---------- */
+function renderEval(){
+  const all=S.subs.map(s=>({s, ev:S.evals[key(s.clan_id,s.goal)], clan:S.clans[s.clan_id]||{name:"?",city:"?"}}))
+    .filter(x=>!S.goalFilter || x.s.goal===S.goalFilter);
+  const pend=all.filter(x=>!x.ev), done=all.filter(x=>x.ev);
+  const list=S.filter==="pending"?pend:S.filter==="done"?done:all;
+  $("#app").innerHTML = `<section class="hero"><h1>Valutazioni</h1><p>Solo gli account della commissione vedono questa pagina. I clan non vedono le prove degli altri.</p></section>
+   <div class="filters">
+     <button data-f="pending" aria-pressed="${S.filter==="pending"}">Da valutare (${pend.length})</button>
+     <button data-f="done" aria-pressed="${S.filter==="done"}">Valutate (${done.length})</button>
+     <button data-f="all" aria-pressed="${S.filter==="all"}">Tutte (${all.length})</button>
+     <select id="gf" aria-label="Filtra per obiettivo" style="border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-weight:700;font-size:14px">
+       <option value="0">Tutti gli obiettivi</option>${GOALS.map(G=>`<option value="${G.n}" ${S.goalFilter===G.n?"selected":""}>${G.n}. ${esc(G.t)}</option>`).join("")}
+     </select>
+   </div>
+   <div class="stack" style="padding-bottom:60px">
+   ${list.length ? list.map(x=>{ const G=GOALS[x.s.goal-1], c=x.ev?.criteria||{}, s=x.s;
+     const updatedAfter = x.ev && new Date(s.updated_at) > new Date(x.ev.evaluated_at);
+     return `<article class="adm-item" data-c="${esc(s.clan_id)}" data-g="${s.goal}">
+      <div class="adm-head"><span class="goal-dot" style="background:${G.c}">${G.n}</span><b>${esc(x.clan.name)}</b><span class="muted">${esc(x.clan.city)}, ${esc(G.lt)}</span>
+        <span class="status ${x.ev?"ok":"wait"}" data-st style="margin-left:auto">${x.ev?`${x.ev.points} pt`:"Da valutare"}</span></div>
+      <p style="margin:0;white-space:pre-wrap">${esc(s.text)}</p>
+      ${linksHtml(s.links)}
+      ${s.photos?.length?`<div class="thumbs">${s.photos.map(p=>`<a data-path="${esc(p)}" target="_blank" rel="noopener"><img data-path="${esc(p)}" alt="Foto del clan"></a>`).join("")}</div>`:""}
+      <small class="muted">Inviata il ${new Date(s.updated_at).toLocaleString("it-IT")}${updatedAfter?". Aggiornata dopo la valutazione":""}</small>
+      <div class="crit">${CRITERIA.map(k=>`<label title="${esc(k.h)}">${k.t}<input type="number" min="0" max="${PTS_CRIT_MAX}" step="1" data-k="${k.k}" value="${c[k.k]??""}" placeholder="0–${PTS_CRIT_MAX}"></label>`).join("")}</div>
+      <label class="f" style="font-size:14px">Commento per il clan<textarea style="min-height:60px" data-comment maxlength="1000">${esc(x.ev?.comment||"")}</textarea></label>
+      <div><button class="btn small" data-save>${x.ev?"Aggiorna valutazione":"Salva valutazione"}</button></div>
+     </article>`; }).join("")
+   : `<p class="muted">${S.filter==="pending"?"Nessuna prova in attesa. Quando un clan invia una missione locale, compare qui (premi Aggiorna).":"Nessuna prova in questa vista."}</p>`}
+   </div>`;
+  document.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{ S.filter=b.dataset.f; renderEval(); });
+  $("#gf").onchange=e=>{ S.goalFilter=+e.target.value; renderEval(); };
+  document.querySelectorAll("[data-save]").forEach(b=>b.onclick=()=>saveEval(b.closest("[data-c]"),b));
+  fillPhotos();
+}
+
+async function fillPhotos(){
+  const paths=[...new Set([...document.querySelectorAll("img[data-path]")].map(i=>i.dataset.path))];
+  const missing=paths.filter(p=>!S.urls[p]);
+  for(let i=0;i<missing.length;i+=100){
+    const { data } = await sb.storage.from("prove").createSignedUrls(missing.slice(i,i+100), 3600);
+    (data||[]).forEach(d=>{ if(d.signedUrl) S.urls[d.path]=d.signedUrl; });
+  }
+  document.querySelectorAll("img[data-path]").forEach(i=>{ if(S.urls[i.dataset.path]) i.src=S.urls[i.dataset.path]; });
+  document.querySelectorAll("a[data-path]").forEach(a=>{ if(S.urls[a.dataset.path]) a.href=S.urls[a.dataset.path]; });
+}
+
+async function saveEval(card,btn){
+  const clan_id=card.dataset.c, goal=+card.dataset.g;
+  const criteria={}; let points=0;
+  for(const inp of card.querySelectorAll("[data-k]")){
+    const v=Math.max(0,Math.min(PTS_CRIT_MAX,Math.round(+inp.value||0)));
+    inp.value=v; criteria[inp.dataset.k]=v; points+=v;
+  }
+  const comment=card.querySelector("[data-comment]").value.trim().slice(0,1000)||null;
+  btn.disabled=true;
+  const { data, error } = await sb.from("evaluations")
+    .upsert({ clan_id, goal, criteria, points, comment, evaluated_at:new Date().toISOString() }, { onConflict:"clan_id,goal" })
+    .select().single();
+  btn.disabled=false;
+  if(error){ console.error(error); return toast("Valutazione non salvata, riprova."); }
+  S.evals[key(clan_id,goal)]=data;
+  const st=card.querySelector("[data-st]"); st.textContent=`${points} pt`; st.className="status ok";
+  btn.textContent="Aggiorna valutazione";
+  toast(`Valutazione salvata: ${points} punti`);
+}
+
+/* ---------- Elenco clan e classifica ---------- */
+function renderClans(){
+  const pts=Object.fromEntries(S.board.map(r=>[r.clan_id,r]));
+  const rows=Object.values(S.clans).sort((a,b)=>(pts[b.id]?.totale||0)-(pts[a.id]?.totale||0) || a.name.localeCompare(b.name));
+  const nSubs=id=>S.subs.filter(s=>s.clan_id===id).length;
+  $("#app").innerHTML = `<section class="hero"><h1>Clan iscritti</h1><p>${rows.length} clan. Il codice serve ai clan per entrare: se lo dimenticano, lo trovi qui. Per reimpostare una password vedi il LEGGIMI.</p>
+    <div style="margin-top:16px"><button class="btn" id="csv">Scarica classifica (CSV)</button></div></section>
+   <div class="panel tablewrap" style="margin-bottom:60px">
+    <table class="t"><thead><tr><th>Clan</th><th>Città</th><th>Gruppo</th><th>Codice</th><th>Prove</th><th class="num">Globale</th><th class="num">Locale</th><th class="num">Bonus</th><th class="num">Totale</th></tr></thead>
+    <tbody>${rows.map(c=>{ const p=pts[c.id]||{}; return `<tr><td><b>${esc(c.name)}</b></td><td>${esc(c.city)}</td><td>${esc(c.grp||"")}</td><td>${esc(c.code)}</td><td>${nSubs(c.id)}</td>
+      <td class="num">${p.globale??0}</td><td class="num">${p.locale??0}</td><td class="num">${p.bonus??0}</td><td class="num"><b>${p.totale??0}</b></td></tr>`; }).join("")}</tbody></table>
+   </div>`;
+  $("#csv").onclick=()=>downloadCsv(rows,pts);
+}
+
+function downloadCsv(rows,pts){
+  const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+  const lines=[["Posizione","Clan","Città","Gruppo","Codice","Globale","Locale","Bonus","Totale","Missioni valutate"].map(q).join(";")];
+  rows.forEach((c,i)=>{ const p=pts[c.id]||{}; lines.push([i+1,c.name,c.city,c.grp,c.code,p.globale??0,p.locale??0,p.bonus??0,p.totale??0,p.completate??0].map(q).join(";")); });
+  const blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download=`classifica-strade2030-${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+</script>
+</body>
+</html>

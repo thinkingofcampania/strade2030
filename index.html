@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Strade 2030 · La sfida dei clan della Campania</title>
+<meta name="description" content="La sfida dei clan scout della Campania sui 17 obiettivi dell'Agenda 2030.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧭</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand" id="brand"></div>
+    <nav class="tabs" id="tabs" role="tablist">
+      <button role="tab" data-tab="map" aria-selected="true">Mappa</button>
+      <button role="tab" data-tab="board" aria-selected="false">Classifica</button>
+      <button role="tab" data-tab="rules" aria-selected="false">Regole</button>
+    </nav>
+    <div class="score-pill hidden" id="scorePill"><strong id="myScore">0</strong><span>punti</span></div>
+    <button class="btn ghost small hidden" id="logout">Esci</button>
+  </div>
+</header>
+<main class="wrap" id="app"><p class="muted" style="padding:60px 0">Caricamento della mappa…</p></main>
+<dialog id="goalDlg"></dialog>
+<div class="toast hidden" id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="assets/goals.js"></script>
+<script src="assets/common.js"></script>
+<script>
+$("#brand").innerHTML = BRAND + `<div><b>Strade 2030</b><small>La sfida dei clan della Campania</small></div>`;
+
+let sb = null;
+const S = { session:null, clan:null, answers:{}, subs:{}, evals:{}, board:[], tab:"map",
+            authMode:"register", newCode:null, photoUrls:{}, openGoal:null, dirty:false, loaded:false };
+const uid = () => S.session?.user?.id;
+
+/* ---------- Punti del proprio clan ---------- */
+function tally(){
+  let g=0,l=0,b=0,done=0;
+  for(const G of GOALS){
+    const a=S.answers[G.n], ok=!!a && a.answer===G.a; if(ok) g+=PTS_GLOBAL;
+    const e=S.evals[G.n]; if(e){ l+=e.points; done++; }
+    if(ok && e && e.points>0) b+=PTS_BONUS;
+  }
+  return {g,l,b,tot:g+l+b,done};
+}
+
+/* ---------- Avvio ---------- */
+(async function init(){
+  if(!isConfigured()) return fatal("L'app non è ancora collegata al database. Segui il passo 3 del file LEGGIMI.");
+  if(!window.supabase) return fatal("Impossibile caricare l'app. Controlla la connessione e ricarica la pagina.");
+  sb = makeClient();
+  const { data:{ session } } = await sb.auth.getSession();
+  S.session = session;
+  if(session) await loadAll(); else { await loadBoard(false); S.loaded=true; render(); }
+})();
+
+async function loadAll(){
+  const id = uid();
+  const [c,a,s,e] = await Promise.all([
+    sb.from("clans").select("*").eq("id",id).maybeSingle(),
+    sb.from("quiz_answers").select("goal,answer").eq("clan_id",id),
+    sb.from("submissions").select("*").eq("clan_id",id),
+    sb.from("evaluations").select("*").eq("clan_id",id)
+  ]);
+  const bad=[c,a,s,e].find(r=>r.error);
+  if(bad){ console.error(bad.error); toast("Problema di connessione: ricarica la pagina."); }
+  S.clan = c.data || null;
+  S.answers = Object.fromEntries((a.data||[]).map(r=>[r.goal,r]));
+  S.subs    = Object.fromEntries((s.data||[]).map(r=>[r.goal,r]));
+  S.evals   = Object.fromEntries((e.data||[]).map(r=>[r.goal,r]));
+  await loadBoard(false);
+  S.loaded = true; render();
+}
+async function loadBoard(rerender=true){
+  const { data, error } = await sb.rpc("classifica");
+  if(!error) S.board = data || [];
+  if(rerender) render();
+}
+
+document.addEventListener("click", e=>{
+  const t=e.target.closest("[data-tab]"); if(!t) return;
+  S.tab=t.dataset.tab;
+  if(S.tab==="board") loadBoard();
+  render(); window.scrollTo({top:0});
+});
+$("#logout").onclick = async ()=>{
+  await sb.auth.signOut();
+  Object.assign(S,{session:null,clan:null,answers:{},subs:{},evals:{},photoUrls:{},tab:"map",authMode:"login"});
+  render();
+};
+
+/* ---------- Render ---------- */
+function render(){
+  if(!S.loaded) return;
+  document.querySelectorAll("#tabs [data-tab]").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===S.tab));
+  $("#scorePill").classList.toggle("hidden", !S.clan);
+  $("#logout").classList.toggle("hidden", !S.session);
+  if(S.clan) $("#myScore").textContent = tally().tot;
+
+  if(S.tab==="board") return renderBoard();
+  if(S.tab==="rules") return renderRules();
+  if(S.newCode) return renderCode();
+  if(!S.session) return renderAuth();
+  if(!S.clan) return renderComplete();
+  return renderMap();
+}
+
+/* ---------- Registrazione e accesso ---------- */
+function renderAuth(){
+  const reg = S.authMode==="register";
+  $("#app").innerHTML = `
+  <div class="reg">
+    <h1>Diciassette strade, un solo territorio.</h1>
+    <p class="muted">Ogni obiettivo dell'Agenda 2030 vi aspetta con due sfide: una domanda sul mondo e una missione da compiere nel vostro paese.</p>
+    <div class="seg" role="group">
+      <button data-mode="register" aria-pressed="${reg}">Registra il clan</button>
+      <button data-mode="login" aria-pressed="${!reg}">Siamo già registrati</button>
+    </div>
+    <form id="authForm" class="panel stack" style="margin-top:12px" autocomplete="off">
+      ${reg ? `
+      <label class="f">Nome del clan<input type="text" id="rName" required maxlength="60" placeholder="Es. Clan La Fenice"></label>
+      <label class="f">Gruppo scout <span class="h">Facoltativo</span><input type="text" id="rGroup" maxlength="60" placeholder="Es. Napoli 12"></label>
+      <label class="f">Città di provenienza<input type="text" id="rCity" required maxlength="60" list="cityList" placeholder="Es. Avellino"></label>
+      <datalist id="cityList">${CITIES.map(c=>`<option value="${esc(c)}">`).join("")}</datalist>
+      <label class="f">Password del clan <span class="h">Almeno 6 caratteri. Condividetela solo dentro il clan.</span><input type="password" id="rPw" required minlength="6" autocomplete="new-password"></label>
+      <label class="f">Ripeti la password<input type="password" id="rPw2" required minlength="6" autocomplete="new-password"></label>
+      <button class="btn" type="submit">Registra il clan e inizia</button>`
+      : `
+      <label class="f">Codice clan <span class="h">Ve l'abbiamo dato alla registrazione, es. FENICE-4821</span><input type="text" id="lCode" required autocapitalize="characters" placeholder="FENICE-4821"></label>
+      <label class="f">Password del clan<input type="password" id="lPw" required autocomplete="current-password"></label>
+      <button class="btn" type="submit">Entra</button>
+      <p class="muted" style="margin:0;font-size:14px">Codice o password dimenticati? Scrivete all'organizzazione regionale: possono recuperarli.</p>`}
+      <p class="err hidden" id="authErr"></p>
+    </form>
+  </div>`;
+  document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{S.authMode=b.dataset.mode;renderAuth();});
+  $("#authForm").addEventListener("submit", e=>{ e.preventDefault(); reg ? doRegister(e.submitter) : doLogin(e.submitter); });
+}
+function authError(msg){ const p=$("#authErr"); p.textContent=msg; p.classList.remove("hidden"); }
+
+function makeCode(name){
+  let base = name.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase()
+    .replace(/\bCLAN\b/g,"").replace(/[^A-Z]/g,"").slice(0,8);
+  if(base.length<3) base="CLAN";
+  return base + "-" + String(Math.floor(1000+Math.random()*9000));
+}
+const codeToEmail = code => code.trim().toLowerCase().replace(/\s+/g,"") + "@" + CLAN_DOMAIN;
+
+async function doRegister(btn){
+  const name=$("#rName").value.trim(), city=$("#rCity").value.trim(), grp=$("#rGroup").value.trim();
+  const pw=$("#rPw").value, pw2=$("#rPw2").value;
+  if(pw!==pw2) return authError("Le due password non coincidono.");
+  if(pw.length<6) return authError("La password deve avere almeno 6 caratteri.");
+  btn.disabled=true; btn.textContent="Registrazione in corso…";
+  try{
+    let code=null, session=null, user=null;
+    for(let i=0;i<5 && !session;i++){
+      code = makeCode(name);
+      const { data, error } = await sb.auth.signUp({ email: codeToEmail(code), password: pw });
+      if(error){ if(/already|registered|exists/i.test(error.message)) continue; throw error; }
+      if(!data.session) throw new Error("conferma-email");
+      session=data.session; user=data.user;
+    }
+    if(!session) throw new Error("Codice non disponibile, riprova.");
+    S.session = session;
+    const { error:e2 } = await sb.from("clans").insert({ id:user.id, name, city, grp: grp||null, code });
+    if(e2) throw e2;
+    S.newCode = code;
+    await loadAll();
+  }catch(err){
+    console.error(err);
+    btn.disabled=false; btn.textContent="Registra il clan e inizia";
+    if(err.message==="conferma-email") authError("Registrazione bloccata: l'organizzazione deve disattivare la conferma email in Supabase (vedi LEGGIMI).");
+    else if(/rate|many/i.test(err.message||"")) authError("Troppe registrazioni in poco tempo da questa rete. Riprovate tra qualche minuto.");
+    else authError("Registrazione non riuscita. Controllate i dati e riprovate.");
+  }
+}
+
+async function doLogin(btn){
+  const code=$("#lCode").value, pw=$("#lPw").value;
+  btn.disabled=true;
+  const { data, error } = await sb.auth.signInWithPassword({ email: codeToEmail(code), password: pw });
+  if(error){ btn.disabled=false; return authError("Codice clan o password non corretti."); }
+  S.session=data.session; S.tab="map";
+  await loadAll();
+}
+
+function renderCode(){
+  $("#app").innerHTML = `
+  <div class="reg">
+    <h1>Benvenuti, ${esc(S.clan?.name||"clan")}!</h1>
+    <p>Questo è il vostro codice clan. Scrivetelo sul quaderno di clan: con il codice e la password potete entrare da qualsiasi telefono.</p>
+    <div class="codebox">${esc(S.newCode)}</div>
+    <button class="btn" id="goMap" style="width:100%">Ho segnato il codice, apriamo la mappa</button>
+  </div>`;
+  $("#goMap").onclick=()=>{ S.newCode=null; render(); };
+}
+
+/* Account creato ma registrazione del clan interrotta */
+function renderComplete(){
+  const code = (S.session.user.email||"").split("@")[0].toUpperCase();
+  if(!S.session.user.email?.endsWith("@"+CLAN_DOMAIN)){
+    return fatal("Questo account non è un clan. Se sei della commissione usa la pagina di valutazione.");
+  }
+  $("#app").innerHTML = `
+  <div class="reg"><h1>Completate la registrazione</h1>
+   <form id="compForm" class="panel stack" style="margin-top:20px">
+    <p style="margin:0">Codice clan: <b>${esc(code)}</b></p>
+    <label class="f">Nome del clan<input type="text" id="cName" required maxlength="60"></label>
+    <label class="f">Gruppo scout <span class="h">Facoltativo</span><input type="text" id="cGroup" maxlength="60"></label>
+    <label class="f">Città di provenienza<input type="text" id="cCity" required maxlength="60"></label>
+    <button class="btn" type="submit">Salva e apri la mappa</button><p class="err hidden" id="authErr"></p>
+   </form></div>`;
+  $("#compForm").addEventListener("submit", async e=>{
+    e.preventDefault();
+    const { error } = await sb.from("clans").insert({ id:uid(), name:$("#cName").value.trim(), city:$("#cCity").value.trim(), grp:$("#cGroup").value.trim()||null, code });
+    if(error) return authError("Salvataggio non riuscito, riprovate.");
+    await loadAll();
+  });
+}
+
+/* ---------- Mappa ---------- */
+function tileMarks(n){
+  const a=S.answers[n];
+  const g = !a ? `<span class="mark">Globale</span>` : (a.answer===GOALS[n-1].a ? `<span class="mark done">Globale ✓</span>` : `<span class="mark miss">Globale ✗</span>`);
+  const e=S.evals[n], s=S.subs[n];
+  const l = e ? `<span class="mark done">Locale ${e.points} pt</span>` : s ? `<span class="mark">Locale inviata</span>` : `<span class="mark">Locale</span>`;
+  return g+l;
+}
+function renderMap(){
+  const c=S.clan, t=tally();
+  $("#app").innerHTML = `<section class="hero">
+    <h1>Scegliete la vostra prossima tappa.</h1>
+    <div class="clan-line"><span class="chip">${esc(c.name)}</span><span class="chip soft">${esc(c.city)}${c.grp?", "+esc(c.grp):""}</span><span class="chip soft">Codice ${esc(c.code)}</span><span class="chip soft">${t.done} missioni locali valutate su 17</span></div>
+  </section>
+  <section class="trail" aria-label="Obiettivi dell'Agenda 2030">
+    ${GOALS.map(G=>`<button class="tile ${G.dark?"dark-text":""}" style="--c:${G.c}" data-goal="${G.n}" aria-label="Obiettivo ${G.n}: ${esc(G.t)}">
+      <span class="num">${G.n}</span><span class="ttl">${esc(G.t)}</span><span class="marks">${tileMarks(G.n)}</span></button>`).join("")}
+  </section>`;
+  document.querySelectorAll("[data-goal]").forEach(b=>b.addEventListener("click",()=>openGoal(+b.dataset.goal)));
+}
+
+/* ---------- Scheda obiettivo ---------- */
+let pendingChoice=null;
+async function photoUrls(paths){
+  const missing=(paths||[]).filter(p=>!S.photoUrls[p]);
+  if(missing.length){
+    const { data } = await sb.storage.from("prove").createSignedUrls(missing, 3600);
+    (data||[]).forEach(d=>{ if(d.signedUrl) S.photoUrls[d.path]=d.signedUrl; });
+  }
+}
+function thumbs(paths){
+  return paths?.length ? `<div class="thumbs">${paths.map(p=>S.photoUrls[p]?`<img src="${esc(S.photoUrls[p])}" alt="Foto inviata">`:"").join("")}</div>` : "";
+}
+
+async function openGoal(n){
+  const G=GOALS[n-1], dlg=$("#goalDlg");
+  if(S.openGoal!==n) pendingChoice=null;
+  S.openGoal=n; S.dirty=false;
+  const a=S.answers[n], answered=!!a;
+  const sub=S.subs[n], ev=S.evals[n];
+  if(sub?.photos?.length && sub.photos.some(p=>!S.photoUrls[p])) { photoUrls(sub.photos).then(()=>{ if(S.openGoal===n && !S.dirty) openGoal(n); }); }
+
+  const opts = G.o.map((o,i)=>{
+    let cls="opt";
+    if(answered){ if(i===G.a) cls+=" right"; else if(i===a.answer) cls+=" wrong"; }
+    return `<button class="${cls}" data-opt="${i}" aria-pressed="${pendingChoice===i}" ${answered?"disabled":""}>${esc(o)}</button>`;
+  }).join("");
+  const globalRes = answered
+    ? `<div class="result">${a.answer===G.a?`<b>Esatto, +${PTS_GLOBAL} punti.</b>`:`<b>Risposta sbagliata.</b> Quella giusta era: ${esc(G.o[G.a])}.`} ${esc(G.f)}</div>`
+    : `<div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn" id="confirmAns" ${pendingChoice==null?"disabled":""}>Conferma risposta</button><span class="muted" style="font-size:14px">Avete un solo tentativo: consultatevi prima.</span></div>`;
+
+  let localBlock;
+  if(ev){
+    localBlock = `<p><span class="status ok">Valutata: ${ev.points} / ${LOCAL_MAX} punti</span></p>
+      ${ev.comment?`<div class="result"><b>Commento della commissione:</b> ${esc(ev.comment)}</div>`:""}
+      <details style="margin-top:12px"><summary>Cosa avete inviato</summary><p style="white-space:pre-wrap">${esc(sub?.text)}</p>${linksHtml(sub?.links)}${thumbs(sub?.photos)}</details>`;
+  } else {
+    const left = 5-(sub?.photos?.length||0);
+    localBlock = `${sub?`<p><span class="status wait">Prova inviata il ${new Date(sub.updated_at).toLocaleDateString("it-IT")}: in attesa di valutazione</span> <span class="muted" style="font-size:14px">Potete ancora aggiornarla.</span></p>`:""}
+      <form id="subForm" class="stack" style="margin-top:8px">
+        <label class="f">Raccontate cosa avete fatto<span class="h">Dove siete stati, chi avete incontrato, cosa avete scoperto.</span><textarea id="sText" required maxlength="4000">${esc(sub?.text||"")}</textarea></label>
+        <label class="f">Link alle prove<span class="h">Uno per riga: cartella Google Drive o Foto, mappa My Maps, video YouTube, post Instagram. Il link deve essere aperto a chiunque lo abbia.</span><textarea id="sLinks" style="min-height:80px" placeholder="https://…">${esc((sub?.links||[]).join("\n"))}</textarea></label>
+        ${left>0?`<label class="f">Foto <span class="h">Facoltativo, ancora ${left} su 5</span><input type="file" id="sFiles" accept="image/*" multiple></label>`:`<p class="muted" style="margin:0">Avete caricato il massimo di 5 foto.</p>`}
+        ${thumbs(sub?.photos)}
+        <button class="btn" type="submit">${sub?"Aggiorna la prova":"Invia la prova"}</button>
+      </form>`;
+  }
+
+  dlg.innerHTML = `
+    <div class="m-head ${G.dark?"dark-text":""}" style="--c:${G.c}">
+      <span class="num">${G.n}</span>
+      <div><h2>${esc(G.t)}</h2><p>${esc(G.s)}</p></div>
+      <button class="m-close" aria-label="Chiudi" id="mClose">×</button>
+    </div>
+    <div class="m-body">
+      <section class="m-sec">
+        <h3>Sfida globale <span class="pts">${PTS_GLOBAL} punti</span></h3>
+        <p class="q">${esc(G.q)}</p><div class="opts">${opts}</div>${globalRes}
+      </section>
+      <section class="m-sec">
+        <h3>Sfida locale: ${esc(G.lt)} <span class="pts">fino a ${LOCAL_MAX} punti</span></h3>
+        <p>${esc(G.ld)}</p><b>Cosa consegnare</b>
+        <ul class="deliver">${G.lx.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+        ${localBlock}
+      </section>
+    </div>`;
+  if(!dlg.open) dlg.showModal();
+  $("#mClose").onclick=()=>dlg.close();
+  dlg.querySelectorAll("[data-opt]").forEach(b=>b.addEventListener("click",()=>{ pendingChoice=+b.dataset.opt; openGoal(n); }));
+  const ca=$("#confirmAns"); if(ca) ca.onclick=()=>answerQuiz(n);
+  const f=$("#subForm"); if(f){ f.addEventListener("input",()=>S.dirty=true); f.addEventListener("submit",e=>{ e.preventDefault(); submitLocal(n,e.submitter); }); }
+}
+$("#goalDlg").addEventListener("close",()=>{ S.openGoal=null; S.dirty=false; pendingChoice=null; render(); });
+$("#goalDlg").addEventListener("click",e=>{ if(e.target.id==="goalDlg") e.target.close(); });
+
+async function answerQuiz(n){
+  if(pendingChoice==null || S.answers[n]) return;
+  const btn=$("#confirmAns"); btn.disabled=true;
+  const choice=pendingChoice;
+  const { error } = await sb.from("quiz_answers").insert({ clan_id:uid(), goal:n, answer:choice });
+  if(error && error.code!=="23505"){ btn.disabled=false; console.error(error); return toast("Risposta non salvata. Controllate la connessione e riprovate."); }
+  if(error){ await loadAll(); openGoal(n); return toast("Avevate già risposto a questa domanda."); }
+  S.answers[n]={goal:n,answer:choice}; pendingChoice=null;
+  toast(choice===GOALS[n-1].a ? `Esatto! +${PTS_GLOBAL} punti` : "Risposta registrata");
+  openGoal(n); render(); loadBoard(false);
+}
+
+/* Riduce le foto a max 1600 px per risparmiare spazio e tempo di caricamento */
+async function shrink(file){
+  try{
+    const bmp = await createImageBitmap(file);
+    const k = Math.min(1, 1600/Math.max(bmp.width,bmp.height));
+    const cv = document.createElement("canvas");
+    cv.width=Math.round(bmp.width*k); cv.height=Math.round(bmp.height*k);
+    cv.getContext("2d").drawImage(bmp,0,0,cv.width,cv.height);
+    return await new Promise(r=>cv.toBlob(r,"image/jpeg",0.82));
+  }catch(e){
+    if(/^image\/(jpeg|png|webp)$/.test(file.type) && file.size<5e6) return file;
+    throw new Error("foto-non-valida");
+  }
+}
+
+async function submitLocal(n,btn){
+  const text=$("#sText").value.trim();
+  const links=$("#sLinks").value.split(/\s+/).map(s=>s.trim()).filter(Boolean);
+  if(links.some(u=>!safeUrl(u))) return toast("Controllate i link: devono iniziare con https://");
+  if(links.length>10) return toast("Massimo 10 link: raccogliete le prove in una cartella condivisa.");
+  if(!text) return toast("Scrivete almeno il racconto di cosa avete fatto.");
+  btn.disabled=true; btn.textContent="Invio in corso…";
+  try{
+    const photos=[...(S.subs[n]?.photos||[])];
+    const files=[...($("#sFiles")?.files||[])].slice(0, Math.max(0,5-photos.length));
+    for(const [i,f] of files.entries()){
+      btn.textContent=`Carico la foto ${i+1} di ${files.length}…`;
+      const blob=await shrink(f);
+      const path=`${uid()}/${n}/${Date.now()}-${i}.jpg`;
+      const { error } = await sb.storage.from("prove").upload(path, blob, { contentType: blob.type || "image/jpeg" });
+      if(error) throw error;
+      photos.push(path);
+    }
+    const { data, error } = await sb.from("submissions")
+      .upsert({ clan_id:uid(), goal:n, text, links, photos, updated_at:new Date().toISOString() }, { onConflict:"clan_id,goal" })
+      .select().single();
+    if(error) throw error;
+    S.subs[n]=data; S.dirty=false;
+    toast("Prova inviata alla commissione");
+    openGoal(n); render();
+  }catch(e){
+    console.error(e);
+    btn.disabled=false; btn.textContent="Invia la prova";
+    toast(e.message==="foto-non-valida" ? "Una foto non è in un formato valido: usate JPG o PNG." : "Invio non riuscito. Controllate la connessione e riprovate.");
+  }
+}
+
+/* ---------- Classifica ---------- */
+function renderBoard(){
+  const rows=S.board, max=Math.max(1,...rows.map(r=>r.totale));
+  let pos=0, prev=null;
+  $("#app").innerHTML = `<section class="hero"><h1>Classifica dei clan</h1><p>${rows.length} clan in cammino. I punti delle sfide locali compaiono appena la commissione le valuta.</p></section>
+   <div class="panel" style="margin-bottom:60px">
+    ${rows.length?`<ol class="lb">${rows.map((r,i)=>{ if(r.totale!==prev){pos=i+1;prev=r.totale;}
+      const me=r.clan_id===uid();
+      return `<li class="${me?"me":""}"><span class="pos">${pos}</span>
+        <div class="who"><b>${esc(r.name)}${me?" (voi)":""}</b><small>${esc(r.city)}${r.grp?", "+esc(r.grp):""}</small>
+          <div class="bar" title="Globale ${r.globale}, locale ${r.locale}, bonus ${r.bonus}"><i style="width:${r.globale/max*100}%;background:var(--ink-soft)"></i><i style="width:${r.locale/max*100}%;background:var(--ok)"></i><i style="width:${r.bonus/max*100}%;background:var(--kerchief)"></i></div></div>
+        <span class="tot">${r.totale}<small>glob. ${r.globale}, loc. ${r.locale}, bonus ${r.bonus}</small></span></li>`; }).join("")}</ol>`
+    :`<p class="muted">Nessun clan ancora in gara. Il primo a registrarsi apre la strada.</p>`}
+   </div>`;
+}
+
+/* ---------- Regole ---------- */
+function renderRules(){
+  $("#app").innerHTML = `<section class="hero"><h1>Come funziona</h1><p>Ogni obiettivo è una tappa con due sfide. Potete affrontarle nell'ordine che volete e in quanto tempo volete.</p></section>
+  <div class="rules" style="padding-bottom:60px">
+    <div class="panel"><span class="big">${PTS_GLOBAL}</span><h3>Sfida globale</h3><p>Una domanda precisa sul tema dell'obiettivo. Un solo tentativo: risposta giusta, ${PTS_GLOBAL} punti; sbagliata, zero. Studiate e confrontatevi prima di confermare.</p></div>
+    <div class="panel"><span class="big">${LOCAL_MAX}</span><h3>Sfida locale</h3><p>Una missione da compiere sul vostro territorio. Inviate racconto e prove; la commissione assegna da 0 a ${PTS_CRIT_MAX} punti per ciascun criterio:</p><ul class="deliver">${CRITERIA.map(c=>`<li><b>${c.t}</b>: ${c.h}</li>`).join("")}</ul></div>
+    <div class="panel"><span class="big">+${PTS_BONUS}</span><h3>Tappa completa</h3><p>Se su uno stesso obiettivo rispondete giusto alla domanda e ottenete punti nella missione locale, ricevete un bonus di ${PTS_BONUS} punti.</p><p class="muted">Punteggio massimo: ${17*(PTS_GLOBAL+LOCAL_MAX+PTS_BONUS)} punti.</p></div>
+  </div>`;
+}
+</script>
+</body>
+</html>
