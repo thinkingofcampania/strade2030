@@ -1,0 +1,12 @@
+LOGHI IN ALTO A SINISTRA
+
+Metti in questa cartella (assets/img) i due loghi ufficiali, con questi nomi esatti:
+
+  logo-agesci.png   -> logo AGESCI
+  logo-rs.png       -> logo della Branca R/S
+
+Meglio PNG con sfondo trasparente, alti almeno 120 pixel.
+Se un file manca o ha un nome diverso, quel logo semplicemente non compare.
+
+thinking-of-campania.jpg è l'immagine del progetto mostrata nella pagina di accesso:
+puoi sostituirla con un'altra immagine quadrata con lo stesso nome.
