@@ -18,6 +18,7 @@
     <nav class="tabs" id="tabs" role="tablist">
       <button role="tab" data-tab="map" aria-selected="true">Mappa</button>
       <button role="tab" data-tab="board" aria-selected="false">Classifica</button>
+      <button role="tab" data-tab="gallery" aria-selected="false">I clan</button>
       <button role="tab" data-tab="rules" aria-selected="false">Regole</button>
     </nav>
     <div class="score-pill hidden" id="scorePill"><strong id="myScore">0</strong><span>punti</span></div>
@@ -36,7 +37,7 @@
 $("#brand").innerHTML = BRAND + `<div><b>Strade 2030</b><small>Thinking of Campania · Il domani è oggi</small></div>`;
 
 let sb = null;
-const S = { session:null, clan:null, answers:{}, subs:{}, evals:{}, board:[], tab:"map",
+const S = { session:null, clan:null, answers:{}, subs:{}, evals:{}, board:[], gallery:null, tab: location.hash==="#clan" ? "gallery" : "map",
             authMode:"register", newCode:null, photoUrls:{}, openGoal:null, dirty:false, loaded:false };
 const uid = () => S.session?.user?.id;
 
@@ -78,6 +79,13 @@ async function loadAll(){
   await loadBoard(false);
   S.loaded = true; render();
 }
+async function loadGallery(rerender=true){
+  const { data, error } = await sb.rpc("galleria");
+  if(error) console.error(error);
+  S.gallery = data || [];
+  if(rerender) render();
+}
+const clanPhotoUrl = p => p ? sb.storage.from("clan").getPublicUrl(p).data.publicUrl : null;
 async function loadBoard(rerender=true){
   const { data, error } = await sb.rpc("classifica");
   if(!error) S.board = data || [];
@@ -88,6 +96,8 @@ document.addEventListener("click", e=>{
   const t=e.target.closest("[data-tab]"); if(!t) return;
   S.tab=t.dataset.tab;
   if(S.tab==="board") loadBoard();
+  if(S.tab==="gallery") S.gallery=null;
+  try{ history.replaceState(null,"",S.tab==="gallery" ? "#clan" : location.pathname); }catch(e){}
   render(); window.scrollTo({top:0});
 });
 $("#logout").onclick = async ()=>{
@@ -105,6 +115,7 @@ function render(){
   if(S.clan) $("#myScore").textContent = tally().tot;
 
   if(S.tab==="board") return renderBoard();
+  if(S.tab==="gallery") return renderGallery();
   if(S.tab==="rules") return renderRules();
   if(S.newCode) return renderCode();
   if(!S.session) return renderAuth();
@@ -133,6 +144,10 @@ function renderAuth(){
       <label class="f">Gruppo scout <span class="h">Facoltativo</span><input type="text" id="rGroup" maxlength="60" placeholder="Es. Napoli 12"></label>
       <label class="f">Città di provenienza<input type="text" id="rCity" required maxlength="60" list="cityList" placeholder="Es. Avellino"></label>
       <datalist id="cityList">${CITIES.map(c=>`<option value="${esc(c)}">`).join("")}</datalist>
+      <fieldset class="profile-box">
+        <legend>Foto e membri del clan <span class="h">Facoltativo, potete aggiungerli anche dopo</span></legend>
+        ${profileFields(null)}
+      </fieldset>
       <label class="f">Password del clan <span class="h">Almeno 6 caratteri. Condividetela solo dentro il clan.</span><input type="password" id="rPw" required minlength="6" autocomplete="new-password"></label>
       <label class="f">Ripeti la password<input type="password" id="rPw2" required minlength="6" autocomplete="new-password"></label>
       <button class="btn" type="submit">Registra il clan e inizia</button>`
@@ -163,6 +178,8 @@ async function doRegister(btn){
   const pw=$("#rPw").value, pw2=$("#rPw2").value;
   if(pw!==pw2) return authError("Le due password non coincidono.");
   if(pw.length<6) return authError("La password deve avere almeno 6 caratteri.");
+  const prof = readProfile();
+  if(prof.error) return authError(prof.error);
   btn.disabled=true; btn.textContent="Registrazione in corso…";
   try{
     let code=null, session=null, user=null;
@@ -175,9 +192,14 @@ async function doRegister(btn){
     }
     if(!session) throw new Error("Codice non disponibile, riprova.");
     S.session = session;
-    const { error:e2 } = await sb.from("clans").insert({ id:user.id, name, city, grp: grp||null, code });
+    const { error:e2 } = await sb.from("clans").insert({ id:user.id, name, city, grp: grp||null, code, members: prof.members });
     if(e2) throw e2;
-    S.newCode = code;
+    if(prof.file){
+      btn.textContent="Carico la foto del clan…";
+      try{ const path=await uploadClanPhoto(prof.file); await sb.from("clans").update({ photo:path }).eq("id",user.id); }
+      catch(ph){ console.error(ph); toast("Clan registrato, ma la foto non è stata caricata: aggiungetela dalla mappa."); }
+    }
+    S.newCode = code; S.gallery = null;
     await loadAll();
   }catch(err){
     console.error(err);
@@ -244,13 +266,14 @@ function renderMap(){
   $("#app").innerHTML = `<section class="hero">
     <p class="kicker">Strade 2030 · Thinking of Campania</p>
     <h1>Scegliete la vostra prossima tappa.</h1>
-    <div class="clan-line"><span class="chip">${esc(c.name)}</span><span class="chip soft">${esc(c.city)}${c.grp?", "+esc(c.grp):""}</span><span class="chip soft">Codice ${esc(c.code)}</span><span class="chip soft">${t.done} missioni locali valutate su 17</span></div>
+    <div class="clan-line"><span class="chip">${esc(c.name)}</span><span class="chip soft">${esc(c.city)}${c.grp?", "+esc(c.grp):""}</span><span class="chip soft">Codice ${esc(c.code)}</span><span class="chip soft">${t.done} missioni locali valutate su 17</span><button class="chip linkchip" id="editProfile">${c.photo||c.members?.length ? "Foto e membri del clan" : "+ Aggiungi foto e membri"}</button></div>
   </section>
   <section class="trail" aria-label="Obiettivi dell'Agenda 2030">
     ${GOALS.map(G=>`<button class="tile ${G.dark?"dark-text":""}" style="--c:${G.c}" data-goal="${G.n}" aria-label="Obiettivo ${G.n}: ${esc(G.t)}">
       <span class="num">${G.n}</span><span class="ttl">${esc(G.t)}</span><span class="marks">${tileMarks(G.n)}</span></button>`).join("")}
   </section>`;
   document.querySelectorAll("[data-goal]").forEach(b=>b.addEventListener("click",()=>openGoal(+b.dataset.goal)));
+  $("#editProfile").onclick=openProfile;
 }
 
 /* ---------- Scheda obiettivo ---------- */
@@ -384,6 +407,83 @@ async function submitLocal(n,btn){
     btn.disabled=false; btn.textContent="Invia la prova";
     toast(e.message==="foto-non-valida" ? "Una foto non è in un formato valido: usate JPG o PNG." : "Invio non riuscito. Controllate la connessione e riprovate.");
   }
+}
+
+/* ---------- Foto e membri del clan ---------- */
+function profileFields(c){
+  const members=(c?.members||[]).join("\n");
+  return `
+    <label class="f">Membri del clan <span class="h">Un nome per riga (massimo 40). Compariranno nella pagina "I clan".</span>
+      <textarea id="pMembers" maxlength="2400" style="min-height:120px" placeholder="Anna Esposito&#10;Luca Russo&#10;…">${esc(members)}</textarea></label>
+    <label class="f">${c?.photo ? "Cambia la foto del clan" : "Foto del clan"} <span class="h">Una foto di gruppo, in orizzontale se possibile. JPG o PNG.</span>
+      <input type="file" id="pPhoto" accept="image/*"></label>
+    <label class="check"><input type="checkbox" id="pConsent"> <span>Confermiamo che tutti i membri del clan, e i genitori di chi è minorenne, sono d'accordo a pubblicare foto e nomi su questo sito.</span></label>`;
+}
+function readProfile(){
+  const members=($("#pMembers")?.value||"").split(/\n|,/).map(s=>s.trim().replace(/\s+/g," ").slice(0,60)).filter(Boolean);
+  const file=$("#pPhoto")?.files?.[0]||null;
+  if(members.length>40) return { error:"Massimo 40 nomi nella lista dei membri." };
+  if((members.length||file) && !$("#pConsent")?.checked) return { error:"Per pubblicare foto e nomi serve la conferma del consenso (la casella in fondo)." };
+  return { members, file };
+}
+async function uploadClanPhoto(file){
+  const blob=await shrink(file);
+  const path=`${uid()}/clan-${Date.now()}.jpg`;
+  const { error } = await sb.storage.from("clan").upload(path, blob, { contentType: blob.type || "image/jpeg" });
+  if(error) throw error;
+  return path;
+}
+function openProfile(){
+  const c=S.clan, dlg=$("#goalDlg");
+  S.openGoal=null;
+  dlg.innerHTML = `
+    <div class="m-head" style="--c:var(--kerchief)">
+      <div><h2>${esc(c.name)}</h2><p>Foto e membri del clan · pagina "I clan"</p></div>
+      <button class="m-close" aria-label="Chiudi" id="mClose">×</button>
+    </div>
+    <div class="m-body"><form id="profForm" class="stack" style="padding-top:18px">
+      ${c.photo?`<img class="prof-photo" src="${esc(clanPhotoUrl(c.photo))}" alt="Foto del ${esc(c.name)}">`:""}
+      ${profileFields(c)}
+      <p class="err hidden" id="profErr"></p>
+      <button class="btn" type="submit">Salva</button>
+    </form></div>`;
+  if(!dlg.open) dlg.showModal();
+  $("#mClose").onclick=()=>dlg.close();
+  $("#profForm").addEventListener("submit", async e=>{
+    e.preventDefault();
+    const btn=e.submitter, err=$("#profErr");
+    const prof=readProfile();
+    if(prof.error){ err.textContent=prof.error; err.classList.remove("hidden"); return; }
+    btn.disabled=true; btn.textContent="Salvataggio…";
+    try{
+      const upd={ members: prof.members };
+      if(prof.file){ btn.textContent="Carico la foto…"; upd.photo=await uploadClanPhoto(prof.file); }
+      const { error } = await sb.from("clans").update(upd).eq("id",uid());
+      if(error) throw error;
+      if(upd.photo && c.photo) sb.storage.from("clan").remove([c.photo]).catch(()=>{});
+      Object.assign(S.clan, upd); S.gallery=null;
+      toast("Profilo del clan aggiornato"); dlg.close();
+    }catch(ex){
+      console.error(ex); btn.disabled=false; btn.textContent="Salva";
+      err.textContent = ex.message==="foto-non-valida" ? "La foto non è in un formato valido: usate JPG o PNG." : "Salvataggio non riuscito. Riprovate.";
+      err.classList.remove("hidden");
+    }
+  });
+}
+
+/* ---------- Galleria dei clan ---------- */
+function renderGallery(){
+  const head = `<section class="hero"><p class="kicker">Strade 2030 · Thinking of Campania</p><h1>I clan in cammino</h1>`;
+  if(S.gallery===null){ $("#app").innerHTML = head+`<p>Caricamento…</p></section>`; loadGallery(); return; }
+  const rows=S.gallery;
+  $("#app").innerHTML = head+`<p>${rows.length} clan della Campania sulle strade dell'Agenda 2030.</p></section>
+    ${rows.length?`<section class="gallery">${rows.map(r=>{ const url=clanPhotoUrl(r.photo); const me=r.clan_id===uid();
+      return `<article class="gcard${me?" me":""}">
+        <header><h2>${esc(r.name)}${r.grp?` <span>- ${esc(r.grp)}</span>`:""}</h2><small>${esc(r.city)}${me?" · il vostro clan":""}</small></header>
+        ${url?`<img src="${esc(url)}" alt="Foto del ${esc(r.name)}" loading="lazy">`:`<div class="gph" aria-hidden="true">${esc(r.name.replace(/^clan\s+/i,"").slice(0,1).toUpperCase())}</div>`}
+        ${r.members?.length?`<p class="gmembers">${r.members.map(esc).join(" · ")}</p>`:""}
+      </article>`; }).join("")}</section>`
+    :`<p class="muted" style="padding-bottom:60px">Ancora nessun clan iscritto.</p>`}`;
 }
 
 /* ---------- Classifica ---------- */

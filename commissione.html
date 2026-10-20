@@ -167,11 +167,25 @@ function renderClans(){
   $("#app").innerHTML = `<section class="hero"><h1>Clan iscritti</h1><p>${rows.length} clan. Il codice serve ai clan per entrare: se lo dimenticano, lo trovi qui. Per reimpostare una password vedi il LEGGIMI.</p>
     <div style="margin-top:16px"><button class="btn" id="csv">Scarica classifica (CSV)</button></div></section>
    <div class="panel tablewrap" style="margin-bottom:60px">
-    <table class="t"><thead><tr><th>Clan</th><th>Città</th><th>Gruppo</th><th>Codice</th><th>Prove</th><th class="num">Globale</th><th class="num">Locale</th><th class="num">Bonus</th><th class="num">Totale</th></tr></thead>
-    <tbody>${rows.map(c=>{ const p=pts[c.id]||{}; return `<tr><td><b>${esc(c.name)}</b></td><td>${esc(c.city)}</td><td>${esc(c.grp||"")}</td><td>${esc(c.code)}</td><td>${nSubs(c.id)}</td>
+    <table class="t"><thead><tr><th>Clan</th><th>Città</th><th>Gruppo</th><th>Codice</th><th>Prove</th><th>Galleria</th><th class="num">Globale</th><th class="num">Locale</th><th class="num">Bonus</th><th class="num">Totale</th></tr></thead>
+    <tbody>${rows.map(c=>{ const p=pts[c.id]||{}; return `<tr><td><b>${esc(c.name)}</b></td><td>${esc(c.city)}</td><td>${esc(c.grp||"")}</td><td>${esc(c.code)}</td><td>${nSubs(c.id)}</td><td>${galleryCell(c)}</td>
       <td class="num">${p.globale??0}</td><td class="num">${p.locale??0}</td><td class="num">${p.bonus??0}</td><td class="num"><b>${p.totale??0}</b></td></tr>`; }).join("")}</tbody></table>
    </div>`;
   $("#csv").onclick=()=>downloadCsv(rows,pts);
+  document.querySelectorAll("[data-hide]").forEach(b=>b.onclick=()=>toggleGallery(b));
+}
+function galleryCell(c){
+  const url=c.photo ? sb.storage.from("clan").getPublicUrl(c.photo).data.publicUrl : null;
+  const info=`${url?`<a href="${esc(url)}" target="_blank" rel="noopener"><img class="mini" src="${esc(url)}" alt="Foto"></a>`:`<span class="muted">nessuna foto</span>`}<small class="muted">${(c.members||[]).length} membri</small>`;
+  return `<div class="gcell">${info}<button class="btn ghost small" data-hide="${esc(c.id)}" data-h="${c.hidden?1:0}">${c.hidden?"Mostra":"Nascondi"}</button>${c.hidden?`<span class="status wait">nascosto</span>`:""}</div>`;
+}
+async function toggleGallery(b){
+  const id=b.dataset.hide, hide=b.dataset.h!=="1";
+  if(hide && !confirm("Nascondere questo clan (foto e nomi) dalla pagina pubblica \"I clan\"?")) return;
+  b.disabled=true;
+  const { error } = await sb.rpc("nascondi_clan",{ p_clan:id, p_hidden:hide });
+  if(error){ b.disabled=false; console.error(error); return toast("Operazione non riuscita. Hai eseguito l'aggiornamento del database?"); }
+  S.clans[id].hidden=hide; renderClans(); toast(hide?"Clan nascosto dalla galleria":"Clan di nuovo visibile in galleria");
 }
 
 function downloadCsv(rows,pts){

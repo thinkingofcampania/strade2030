@@ -94,3 +94,21 @@ where email = lower('FENICE-4821') || '@clan.strade2030.it';
 - **Spazio:** 500 MB di database e 1 GB di foto. L'app riduce ogni foto a circa 300 KB, quindi ci stanno più di 3.000 foto. Per video e materiali pesanti i clan usano i link (Drive, YouTube).
 - **GitHub Pages:** gratuito per i repository pubblici, con aggiornamenti illimitati per un sito di queste dimensioni.
 - **Registrazioni:** Supabase limita le registrazioni troppo ravvicinate dalla stessa rete. Se molti clan si registrano insieme dallo stesso Wi-Fi, alza il limite in *Authentication > Rate Limits*.
+
+
+## Aggiornamento · Foto del clan, membri e pagina "I clan"
+
+Da fare **una sola volta**, prima di caricare la nuova versione del sito:
+
+1. Supabase > **SQL Editor** > *New query*.
+2. Incolla tutto il file `supabase/aggiornamento-galleria.sql` e premi **Run**. Deve comparire *Success*. Non cancella nessun dato.
+
+Poi carica su GitHub i file nuovi. Da quel momento:
+
+- all'iscrizione i clan possono aggiungere **foto di gruppo** e **nomi dei membri** (facoltativo);
+- dopo, li modificano dalla mappa con il pulsante **Foto e membri del clan**;
+- la scheda **I clan** mostra a tutti, anche senza accesso, nome, gruppo, città, foto e membri;
+- link diretto alla galleria: `https://thinkingofcampania.github.io/strade2030/#clan`;
+- nell'area commissione, scheda *Clan*, il pulsante **Nascondi** toglie un clan dalla galleria (e **Mostra** lo rimette).
+
+Per pubblicare foto e nomi il clan deve spuntare la conferma del consenso (dei membri e, per i minorenni, dei genitori).

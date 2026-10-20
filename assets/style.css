@@ -206,3 +206,32 @@ table.t td.num{text-align:right;font-variant-numeric:tabular-nums}
   .poster{position:static;max-width:260px;margin:0 auto}
 }
 @media (max-width:600px){ .brand .logos img{height:36px} .brand b{font-size:21px} }
+
+/* Foto e membri del clan */
+.profile-box{border:1.5px dashed var(--line);border-radius:14px;padding:14px 16px 16px;margin:4px 0 0;display:grid;gap:14px}
+.profile-box legend{font-weight:700;padding:0 6px}
+.profile-box legend .h{font-weight:400;color:var(--ink-soft);font-size:14px}
+label.check{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;line-height:1.4;color:var(--ink-soft);cursor:pointer}
+label.check input{width:20px;height:20px;flex:none;margin-top:1px;accent-color:var(--kerchief)}
+input[type=file]{font-size:15px;max-width:100%}
+.linkchip{background:transparent;border-color:var(--kerchief);color:var(--kerchief);cursor:pointer}
+.linkchip:hover{background:var(--kerchief);color:var(--on-red)}
+.prof-photo{width:100%;max-height:320px;object-fit:cover;border-radius:12px;display:block}
+
+/* Galleria dei clan */
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;padding:4px 0 70px}
+.gcard{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.gcard.me{border-color:var(--kerchief);box-shadow:0 0 0 2px color-mix(in srgb,var(--kerchief) 30%,transparent)}
+.gcard header{padding:14px 16px 12px;border-top:5px solid var(--kerchief)}
+.gcard h2{font-size:24px;text-transform:uppercase;line-height:1.05}
+.gcard h2 span{color:var(--kerchief)}
+.gcard header small{display:block;color:var(--ink-soft);font-size:14px;margin-top:4px}
+.gcard img,.gcard .gph{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--paper-2)}
+.gcard .gph{display:grid;place-items:center;font-family:var(--display);font-size:72px;color:color-mix(in srgb,var(--kerchief) 55%,var(--paper-2))}
+.gmembers{margin:0;padding:12px 16px 16px;font-size:14.5px;line-height:1.55;color:var(--ink-soft)}
+@media (max-width:600px){ .gallery{grid-template-columns:1fr;gap:14px} }
+.gcell{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.gcell img.mini{width:44px;height:33px;object-fit:cover;border-radius:6px;display:block}
+.gcell small{font-size:13px}
+label.f input,label.f textarea,label.f select{font-weight:400}
+table.t td:nth-child(4){white-space:nowrap}
