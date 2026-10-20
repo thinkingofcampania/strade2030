@@ -219,17 +219,17 @@ input[type=file]{font-size:15px;max-width:100%}
 .prof-photo{width:100%;max-height:320px;object-fit:cover;border-radius:12px;display:block}
 
 /* Galleria dei clan */
-.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;padding:4px 0 70px}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;padding:4px 0 70px}
 .gcard{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
 .gcard.me{border-color:var(--kerchief);box-shadow:0 0 0 2px color-mix(in srgb,var(--kerchief) 30%,transparent)}
-.gcard header{padding:14px 16px 12px;border-top:5px solid var(--kerchief)}
-.gcard h2{font-size:24px;text-transform:uppercase;line-height:1.05}
+.gcard header{padding:10px 12px 8px;border-top:4px solid var(--kerchief)}
+.gcard h2{font-size:18px;text-transform:uppercase;line-height:1.1}
 .gcard h2 span{color:var(--kerchief)}
-.gcard header small{display:block;color:var(--ink-soft);font-size:14px;margin-top:4px}
+.gcard header small{display:block;color:var(--ink-soft);font-size:12.5px;margin-top:2px}
 .gcard img,.gcard .gph{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--paper-2)}
-.gcard .gph{display:grid;place-items:center;font-family:var(--display);font-size:72px;color:color-mix(in srgb,var(--kerchief) 55%,var(--paper-2))}
-.gmembers{margin:0;padding:12px 16px 16px;font-size:14.5px;line-height:1.55;color:var(--ink-soft)}
-@media (max-width:600px){ .gallery{grid-template-columns:1fr;gap:14px} }
+.gcard .gph{display:grid;place-items:center;font-family:var(--display);font-size:48px;color:color-mix(in srgb,var(--kerchief) 55%,var(--paper-2))}
+.gmembers{margin:0;padding:8px 12px 12px;font-size:12.5px;line-height:1.5;color:var(--ink-soft)}
+@media (max-width:600px){ .gallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px} .gcard h2{font-size:15px} .gmembers{font-size:11.5px} }
 .gcell{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .gcell img.mini{width:44px;height:33px;object-fit:cover;border-radius:6px;display:block}
 .gcell small{font-size:13px}
