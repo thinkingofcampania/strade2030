@@ -412,9 +412,25 @@ label.f{font-weight:600}
 .hero h1,.reg h1,.section-title,.m-head h2,.m-head .num,.tile .num,.sdg b,.brand b,.score-pill strong{font-weight:700}
 .brand b{text-transform:none;letter-spacing:0}
 
-/* Caselle della mappa con l'icona ufficiale (l'icona resta intera, gli stati sotto) */
-.tile.has-ico{padding:0;min-height:0;overflow:hidden;gap:0}
+/* Caselle della mappa con l'icona ufficiale: icona intera in alto,
+   sotto una fascia uguale per tutti con gli stati centrati */
+.tile.has-ico{padding:0;min-height:0;overflow:hidden;gap:0;background:var(--card);color:var(--ink);border:1px solid var(--line)}
 .tile.has-ico .ico{display:block;width:100%;aspect-ratio:1;object-fit:cover}
 .tile.has-ico .num,.tile.has-ico .ttl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-.tile.has-ico .marks{margin:0;padding:9px 10px 10px;min-height:44px;align-content:flex-start}
-@media (max-width:600px){.tile.has-ico{min-height:0;padding:0}.tile.has-ico .marks{padding:8px}}
+.tile.has-ico .marks{margin:0;padding:10px 8px 11px;min-height:46px;justify-content:center;align-content:center;background:var(--card);border-top:1px solid var(--line)}
+.tile.has-ico .mark{background:var(--paper-2);color:var(--ink-soft);font-weight:600}
+.tile.has-ico .mark.done{background:var(--ok);color:#fff;font-weight:700}
+.tile.has-ico .mark.sent{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink-soft)}
+.tile.has-ico .mark.miss{background:color-mix(in srgb,var(--kerchief) 14%,transparent);color:var(--kerchief);font-weight:700}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tile.has-ico .mark.done{color:#0E1F14}}
+:root[data-theme="dark"] .tile.has-ico .mark.done{color:#0E1F14}
+@media (max-width:600px){.tile.has-ico{min-height:0;padding:0}.tile.has-ico .marks{padding:8px 6px 9px}}
+/* Modalità scura: fascia più chiara dello sfondo, bordo ed etichette ben visibili */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--band:#2C2725;--band-line:#574E4A;--chip:#423A37;--chip-ink:#ECE5DD}}
+:root[data-theme="dark"]{--band:#2C2725;--band-line:#574E4A;--chip:#423A37;--chip-ink:#ECE5DD}
+.tile.has-ico{background:var(--band,var(--card));border-color:var(--band-line,var(--line))}
+.tile.has-ico .marks{background:var(--band,var(--card));border-top-color:var(--band-line,var(--line))}
+.tile.has-ico .mark{background:var(--chip,var(--paper-2));color:var(--chip-ink,var(--ink-soft))}
+.tile.has-ico .mark.sent{background:transparent;color:var(--chip-ink,var(--ink));box-shadow:inset 0 0 0 1.5px var(--chip-ink,var(--ink-soft))}
+.tile.has-ico .mark.done{background:var(--ok)}
+.tile.has-ico .mark.miss{background:color-mix(in srgb,var(--kerchief) 22%,transparent);color:var(--kerchief)}

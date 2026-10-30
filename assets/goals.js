@@ -33,7 +33,7 @@ const SBLOCCO_LOCALI = 1;
 
 /* Icone ufficiali degli obiettivi: assets/img/sdg/goal-1.png ... goal-17.png
    Finché SDG_ICONE è false si usano i riquadri colorati con numero e nome. */
-const SDG_ICONE = true;    // icone ufficiali in assets/img/sdg/ (false = riquadri colorati)
+const SDG_ICONE = true;    // icone ufficiali sulla mappa, da assets/img/sdg/ (false = caselle colorate)
 const SDG_ICON = n => `assets/img/sdg/goal-${n}.png`;
 
 /* ---------------------------------------------------------------------

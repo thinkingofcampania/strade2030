@@ -113,9 +113,10 @@ $("#spiritDlg").addEventListener("cancel",()=>{ try{ localStorage.setItem("strad
 document.addEventListener("click", e=>{ if(e.target.closest("[data-spirit]")) openSpirit(); });
 
 /* ---------- Icone SDG (con ripiego sul riquadro colorato) ---------- */
+// Riquadri colorati con numero e nome (le icone ufficiali sono solo sulla mappa)
 function sdg(n, cls=""){
   const G=goal(n);
-  return `<span class="sdg ${cls}" style="--c:${G.c}" title="${n}. ${esc(G.t)}">${SDG_ICONE?`<img src="${esc(SDG_ICON(n))}" alt="Obiettivo ${n}: ${esc(G.t)}" loading="lazy" onerror="this.remove()">`:""}<b>${n}</b><i>${esc(G.t)}</i></span>`;
+  return `<span class="sdg ${cls}" style="--c:${G.c}" title="${n}. ${esc(G.t)}"><b>${n}</b><i>${esc(G.t)}</i></span>`;
 }
 
 /* ---------- Render ---------- */
