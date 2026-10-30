@@ -685,7 +685,7 @@ function renderFuture(){
   const maxC=Math.max(1,...counts.map(c=>c.n));
   const nClan=new Set(clanRows.map(r=>r.soggetto)).size;
   const chart = `<section class="panel">
-    <p class="kicker" style="margin:0 0 4px">Thinking of Città</p>
+    <p class="kicker" style="margin:0 0 4px">Thinking of Comunità</p>
     <h2>Quante volte è stato scelto ogni obiettivo</h2>
     <p class="muted">${nClan} clan hanno scelto i loro 3 obiettivi.</p>
     <ol class="hbars">${counts.map(({G,n})=>`<li>${sdg(G.n,"mini")}<span class="hb-label">${G.n}. ${esc(G.t)}</span><span class="hb-track"><i style="width:${n/maxC*100}%;background:${G.c}"></i></span><b>${n}</b></li>`).join("")}</ol>
@@ -726,7 +726,7 @@ function renderFuture(){
 
 /* Livelli: clan (ora), zona e Agorà regionale (dopo la sfida) */
 const LEVELS=[
-  {k:"clan", n:"1", t:"Thinking of Città", s:"I clan", d:"Ogni clan sceglie i 3 obiettivi di futuro per il suo territorio."},
+  {k:"clan", n:"1", t:"Thinking of Comunità", s:"I clan", d:"Ogni clan sceglie i 3 obiettivi di futuro per il suo territorio."},
   {k:"zona", n:"2", t:"Thinking of Zona", s:"Agorà di Zona", d:"Ogni zona, partendo dalle scelte dei suoi clan, sceglierà i suoi 3 obiettivi."},
   {k:"regionale", n:"3", t:"Thinking of Campania", s:"Agorà regionale", d:"L'ultima tappa: all'Agorà la Campania sceglierà insieme i suoi 3 obiettivi."}];
 const levelOpen = k => k==="clan" || (S.scelte||[]).some(r=>r.livello===k);
