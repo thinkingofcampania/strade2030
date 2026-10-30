@@ -459,3 +459,42 @@ label.f{font-weight:600}
   .lb .who small{font-size:13.5px}
   .lb .tot{font-size:26px}
 }
+
+/* ---------- Percorso verso la coppa (mappa) ---------- */
+.percorso{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 24px 16px;margin-top:14px}
+.percorso .perc-txt{margin:0 0 6px;max-width:70ch}
+.percorso .perc-txt b{display:block;font-size:19px;margin-bottom:2px}
+.percorso .track{position:relative;height:92px;margin:0 30px}
+.percorso .line{position:absolute;left:0;right:0;top:46px;height:8px;border-radius:4px;background:var(--paper-2);overflow:hidden}
+.percorso .line i{display:block;height:100%;background:var(--kerchief);border-radius:4px}
+.percorso .stop{position:absolute;top:36px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;z-index:1}
+.percorso .stop b{width:28px;height:28px;border-radius:50%;background:var(--card);border:3px solid var(--line);display:grid;place-items:center;font-size:14px;line-height:1}
+.percorso .stop.start b{width:18px;height:18px;margin-top:5px;background:var(--kerchief);border-color:var(--kerchief)}
+.percorso .stop.done b{background:var(--ok);border-color:var(--ok);color:#fff}
+.percorso .stop small{font-size:12.5px;font-weight:600;color:var(--ink-soft);white-space:nowrap}
+.percorso .stop.cup{top:22px}
+.percorso .stop.cup svg{width:46px;height:46px;color:#C9971C;background:var(--card);border:3px solid #C9971C;border-radius:50%;padding:7px;box-sizing:border-box}
+.percorso.is-done .stop.cup svg{background:#C9971C;color:#fff}
+.percorso .you{position:absolute;top:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;z-index:2;transition:left .6s ease}
+.percorso .you em{font-style:normal;font-size:12px;font-weight:700;background:var(--ink);color:var(--paper);padding:2px 9px;border-radius:999px}
+.percorso .you::after{content:"";width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:10px solid var(--ink);margin-top:1px}
+.percorso .perc-num{margin:2px 0 0;font-size:14.5px;color:var(--ink-soft)}
+.percorso .perc-num b{color:var(--ink)}
+@media (max-width:600px){
+  .percorso{padding:16px 16px 12px}
+  .percorso .track{margin:0 22px}
+  .percorso .stop small{font-size:11.5px}
+  .percorso .stop.flag small{white-space:normal;text-align:center;width:90px;line-height:1.15}
+}
+
+/* ---------- Prove della sfida locale ---------- */
+.parts.prove>li{padding:12px 14px}
+.parts.prove .lvl{display:inline-flex;align-items:center;gap:8px;font-weight:700}
+.lvl-dots{display:inline-flex;gap:3px}
+.lvl-dots i{width:8px;height:8px;border-radius:50%;background:var(--paper-2);border:1px solid var(--line)}
+.lvl-dots i.on{background:var(--kerchief);border-color:var(--kerchief)}
+.parts.prove .prova-t{margin:6px 0 8px}
+.parts.prove .rules-box{margin:0 0 8px}
+.keepgoing{border-left:4px solid var(--kerchief);background:color-mix(in srgb,var(--kerchief) 8%,transparent);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0}
+.parts.prove .part-top span:first-child::before{content:none}
+.parts.prove .rules-box li{border:0;padding:0;background:none;border-radius:0;counter-increment:none;margin:2px 0}

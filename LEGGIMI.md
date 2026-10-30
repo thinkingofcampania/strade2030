@@ -172,3 +172,13 @@ Metti le 17 icone in `assets/img/sdg/` con i nomi `goal-1.png` ... `goal-17.png`
 - La commissione valuta **solo le sfide locali**: la scheda Campane non c'è più, perché globali e campane si correggono da sole.
 - Se un giorno una risposta giusta di una domanda campana fosse sbagliata: Supabase → Table Editor → `campana_key`, cambia `correct` (0 = prima opzione, 1 = seconda, …) per quell'obiettivo, poi in SQL Editor esegui `select ricalcola_campana(N);` con il numero dell'obiettivo. I punti dei clan si aggiornano.
 
+## Aggiornamento 6 · Percorso verso la coppa, sfide locali a 3 prove, campane "guarda le fonti"
+
+**Database:** esegui `supabase/aggiornamento-4.sql` in Supabase > SQL Editor > Run (una volta sola, si può rieseguire senza danni).
+
+- **Mappa:** sotto il riquadro dello sblocco c'è il percorso verso il traguardo (la coppa), con il triangolino "Voi" che mostra a che punto è il clan e una frase che li sprona a continuare dopo lo sblocco.
+- **Sfide locali:** titolo unico "Sfida locale", 3 prove sul territorio dalla più semplice alla più impegnativa (Primo passo, Si entra nel vivo, Il passo più lungo), 10 punti ciascuna, massimo 30. Niente scelte tra attività o varianti. I clan possono mandare le prove anche in momenti diversi: se segnalano nuove prove dopo la valutazione, la sfida torna "da valutare" in commissione.
+- **Domande campane:** piccole ricerche a risposta aperta, con le fonti da leggere. La commissione le valuta da 0 a 10 nella scheda **Campane**, dove trova anche la risposta di riferimento (solo la commissione la vede e può modificarla).
+- **Obiettivi di futuro:** ogni clan vede e cambia solo le proprie scelte. Il grafico e l'elenco di tutti i clan sono nella scheda **Futuro** della commissione (con filtro per zona e file per Excel), da mostrare alla fine.
+- Testi delle prove e delle domande: `assets/goals.js` (campo `parts` e `campana`). Nomi dei livelli: `LIVELLI` nello stesso file.
+

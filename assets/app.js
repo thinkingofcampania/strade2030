@@ -309,6 +309,32 @@ function tileMarks(n){
   const l = e ? `<span class="mark done">Locale ${e.points}</span>` : s ? `<span class="mark sent">Locale inviata</span>` : `<span class="mark">Locale</span>`;
   return g+c+l;
 }
+/* Percorso: dove si trova il clan sulla strada verso la coppa.
+   Passi: 17 domande globali + 17 campane + 3 prove locali per obiettivo. */
+function percorso(){
+  const p=progress();
+  const prove=GOALS.reduce((s,G)=>{ const sc=S.evals[G.n]?.criteria||{}; return s+G.parts.filter((x,i)=>(sc["d"+(i+1)]||0)>0).length; },0);
+  const totProve=GOALS.reduce((s,G)=>s+G.parts.length,0);
+  const fatti=Math.min(17,p.globali)+Math.min(17,p.campane)+prove, tot=34+totProve;
+  const tappa=(34+SBLOCCO_LOCALI)/tot*100;
+  const pos=p.sbloccato ? Math.max(tappa, fatti/tot*100) : Math.min(tappa-2, fatti/tot*100);
+  const finito = fatti>=tot;
+  const testo = finito ? `<b>Strada completata!</b> Avete fatto tutte le prove di tutti gli obiettivi: la coppa è vostra.`
+    : p.sbloccato ? `<b>Obiettivi di futuro sbloccati: ora non fermatevi.</b> Scegliete le sfide locali che vi stanno più a cuore e buttate il cuore oltre l'ostacolo: ogni prova conta, anche una sola.`
+    : `<b>Prima tappa: gli obiettivi di futuro.</b> Poi la strada continua con le prove locali, fino alla coppa.`;
+  const cup=`<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 6h20v4h8v5c0 6-4.5 10-10 10.6-1.4 3.6-4.3 6-7.5 6.3V37h6v5H17.5v-5h6v-5.1c-3.2-.3-6.1-2.7-7.5-6.3C10.5 25 6 21 6 15v-5h8V6zm-4 8v1c0 3.6 2.4 6.3 5.4 6.9-.9-2.2-1.4-4.6-1.4-7.2V14h-4zm28 0h-4v.7c0 2.6-.5 5-1.4 7.2 3-.6 5.4-3.3 5.4-6.9v-1z" fill="currentColor"/></svg>`;
+  return `<section class="percorso ${p.sbloccato?"is-open":""} ${finito?"is-done":""}" aria-label="A che punto siete">
+    <p class="perc-txt">${testo}</p>
+    <div class="track" role="img" aria-label="Avete percorso il ${Math.round(fatti/tot*100)}% della strada">
+      <div class="line"><i style="width:${pos}%"></i></div>
+      <span class="stop start" style="left:0"><b></b><small>Partenza</small></span>
+      <span class="stop flag ${p.sbloccato?"done":""}" style="left:${tappa}%"><b>${p.sbloccato?"✓":""}</b><small>Obiettivi di futuro</small></span>
+      <span class="stop cup ${finito?"done":""}" style="left:100%">${cup}<small>Traguardo</small></span>
+      <span class="you" style="left:${pos}%"><em>Voi</em></span>
+    </div>
+    <p class="perc-num"><b>${Math.round(fatti/tot*100)}%</b> della strada · prove locali valutate: <b>${prove}</b> di ${totProve}</p>
+  </section>`;
+}
 function progressCard(){
   const p=progress();
   const bar=(v,max,label)=>`<div class="pbar"><span>${label}</span><b>${Math.min(v,max)}/${max}</b><i style="--w:${Math.min(100,v/max*100)}%"></i></div>`;
@@ -327,6 +353,7 @@ function renderMap(){
     <div class="clan-line"><span class="chip">${esc(c.name)}</span><span class="chip soft">Zona ${esc(c.zona)}${c.grp?" · "+esc(c.grp):""}</span><span class="chip soft">Codice ${esc(c.code)}</span><span class="chip soft">${t.done} sfide locali valutate</span><button class="chip linkchip" id="editProfile">Profilo del clan</button><button class="chip linkchip" data-spirit>Lo spirito del gioco</button></div>
   </section>
   ${progressCard()}
+  ${percorso()}
   <section class="trail" aria-label="Obiettivi dell'Agenda 2030">
     ${GOALS.map(G=>`<button class="tile ${G.dark?"dark-text":""} ${SDG_ICONE?"has-ico":""}" style="--c:${G.c}" data-goal="${G.n}" aria-label="Obiettivo ${G.n}: ${esc(G.t)}">
       ${SDG_ICONE?`<img class="ico" src="${esc(SDG_ICON(G.n))}" alt="" onerror="this.closest('.tile').classList.remove('has-ico');this.remove()">`:""}<span class="num">${G.n}</span><span class="ttl">${esc(G.t)}</span><span class="marks">${tileMarks(G.n)}</span></button>`).join("")}
@@ -337,9 +364,12 @@ function renderMap(){
 
 /* ---------- Scheda obiettivo ---------- */
 let pendingChoice=null, pendingCamp=null;
-const partsHtml = (parts, prefix, scores) => `<ol class="parts">${parts.map((p,i)=>{
+const dots = i => `<span class="lvl-dots" aria-hidden="true">${[0,1,2].map(j=>`<i class="${j<=i?"on":""}"></i>`).join("")}</span>`;
+const partsHtml = (parts, prefix, scores) => `<ol class="parts prove">${parts.map((p,i)=>{
   const k=prefix+(i+1), sc=scores?.[k];
-  return `<li><div class="part-top"><span>${esc(p.t)}</span><span class="pmax">${sc!=null?`<b>${sc}</b>/`:"max "}${p.p}</span></div>
+  return `<li><div class="part-top"><span class="lvl">${dots(i)} Prova ${i+1} · ${esc(LIVELLI[i]||"")}</span><span class="pmax">${sc!=null?`<b>${sc}</b>/${p.p}`:`${p.p} punti`}</span></div>
+    <p class="prova-t">${esc(p.t)}</p>
+    ${p.r?`<div class="rules-box"><b>Regole obbligatorie</b><ul>${p.r.map(r=>`<li>${esc(r)}</li>`).join("")}</ul></div>`:""}
     <div class="crit-chips">${p.k.map(x=>`<span>${esc(x)}</span>`).join("")}</div></li>`; }).join("")}</ol>`;
 function srcHtml(src){
   return src.map(([n,u])=>u&&safeUrl(u) ? `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(n)}</a>` : esc(n)).join(" · ");
@@ -348,21 +378,22 @@ function mailSubject(G){ const c=S.clan; return `${c.zona} - ${c.name} - Obietti
 function consegnaHtml(G){
   const c=S.clan, subject=mailSubject(G);
   const regole=`<ul class="deliver small">
-      <li>Una mail per sfida, con l'oggetto qui sopra.</li>
-      <li>Nel testo della mail scrivete cosa contiene ogni file e a quale consegna si riferisce (1, 2, 3${G.acts?", e quali attività avete svolto":""}).</li>
+      <li>Usate sempre l'oggetto qui sopra.</li>
+      <li>Nel testo della mail scrivete quali prove avete fatto (1, 2, 3) e cosa contiene ogni file.</li>
+      <li>Potete mandare le prove tutte insieme o una alla volta, sempre con lo stesso oggetto.</li>
       <li>File oltre ${CONSEGNA.limiteMB} MB: non allegateli. Caricateli su Google Drive, WeTransfer o Dropbox e incollate il link nella mail, con accesso "chiunque abbia il link".</li>
       <li>Video: meglio compressi, oppure su YouTube come "non in elenco".</li></ul>`;
   if(!(CONSEGNA.modo==="email" && emailOk(CONSEGNA.email||""))){
     return `<div class="howto"><h4>Come consegnare</h4><p>Le istruzioni per inviare il materiale arriveranno a breve dagli organizzatori.</p></div>`;
   }
-  const body=`Clan: ${c.name}\nGruppo: ${c.grp||""}\nZona: ${c.zona}\nCodice: ${c.code}\nObiettivo ${G.n} - ${G.t} - Sfida locale\n${G.acts?"\nAttività svolte (A, B, C, D): \n":""}\nContenuto dei file:\n1. \n2. \n3. \n`;
+  const body=`Clan: ${c.name}\nGruppo: ${c.grp||""}\nZona: ${c.zona}\nCodice: ${c.code}\nObiettivo ${G.n} - ${G.t} - Sfida locale\n\nProve inviate (1, 2, 3): \n\nContenuto dei file:\n- \n- \n`;
   const mail=`mailto:${CONSEGNA.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   return `<div class="howto"><h4>Come consegnare</h4>
-    <p><b>1. Raccogliete il materiale</b> di tutte le consegne qui sopra.</p>
+    <p><b>1. Raccogliete il materiale</b> delle prove che avete fatto.</p>
     <p><b>2. Inviatelo per email</b> a <b>${esc(CONSEGNA.email)}</b> con questo oggetto:</p>
     <p class="subject">${esc(subject)}</p>
     <a class="btn small" href="${esc(mail)}">Scrivi la mail</a>${regole}
-    <p><b>3. Avvisateci qui</b> premendo "Abbiamo inviato la mail": così la commissione sa che c'è materiale da valutare.</p></div>`;
+    <p><b>3. Avvisateci qui</b> premendo il pulsante qui sotto: così la commissione sa che c'è materiale da valutare.</p></div>`;
 }
 
 function openGoal(n){
@@ -396,33 +427,31 @@ function openGoal(n){
     ? `<p><span class="status ok">Valutata: ${ce.points}/${PTS_CAMPANA} punti</span></p>
        <div class="result"><b>La vostra risposta:</b><br><span class="pre">${esc(ca?.answer)}</span>${ce.comment?`<br><br><b>Commento della commissione:</b> ${esc(ce.comment)}`:""}</div>`
     : `<form id="campForm" class="stack" style="margin-top:10px">
-        <label class="f">La vostra risposta <span class="h">Scrivete anche dove avete trovato i dati. Potete correggerla finché la commissione non la valuta.</span>
+        <label class="f">La vostra risposta <span class="h">Guardate le fonti e scrivete i dati che avete trovato, con l'anno e dove li avete letti. Potete correggerla finché la commissione non la valuta.</span>
           <textarea id="cAns" required maxlength="3000" style="min-height:110px">${esc(ca?.answer||"")}</textarea></label>
         <div class="row-actions"><button class="btn" type="submit">${ca?"Aggiorna la risposta":"Invia la risposta"}</button>${ca?`<span class="status wait">Inviata, in attesa di valutazione</span>`:""}</div>
       </form>`;
 
   // Locale
   const sub=S.subs[n], ev=S.evals[n], scores=ev?.criteria||null;
-  let localBody = "";
-  if(G.variants) localBody += `<div class="variants">${G.variants.map(([t,d])=>`<div><b>${esc(t)}</b><p>${esc(d)}</p></div>`).join("")}</div>`;
-  if(G.acts){
-    localBody += `<p class="choose">Sceglietene ${G.choose}</p>` + G.acts.map(A=>{
-      const tot=A.parts.reduce((s,p)=>s+p.p,0);
-      return `<div class="act"><h4><span class="act-id">${A.id}</span> ${esc(A.t)} <span class="pts">max ${tot}</span></h4><p>${esc(A.d)}</p>
-        ${A.rules?`<div class="rules-box"><b>Regole obbligatorie</b><ul>${A.rules.map(r=>`<li>${esc(r)}</li>`).join("")}</ul></div>`:""}
-        ${A.fonti?`<p class="muted small">${esc(A.fonti)}</p>`:""}
-        ${partsHtml(A.parts, A.id, scores)}</div>`; }).join("");
-  } else {
-    localBody += `<b>Cosa consegnare</b>${partsHtml(G.parts, "d", scores)}`;
-  }
+  const localBody = partsHtml(G.parts, "d", scores);
+  const provate = ev ? G.parts.filter((p,i)=>(scores?.["d"+(i+1)]||0)>0).length : 0;
+  const nuove = sub && ev && new Date(sub.updated_at) > new Date(ev.evaluated_at);
   let localForm;
-  if(ev){
-    localForm = `<p><span class="status ok">Valutata: ${ev.points}/${LOCAL_MAX} punti</span></p>
+  if(ev && provate>=G.parts.length){
+    localForm = `<p><span class="status ok">Valutata: ${ev.points}/${LOCAL_MAX} punti · sfida completa</span></p>
       ${ev.comment?`<div class="result"><b>Commento della commissione:</b> ${esc(ev.comment)}</div>`:""}`;
+  } else if(ev){
+    localForm = `<p><span class="status ok">Valutata: ${ev.points}/${LOCAL_MAX} punti</span></p>
+      ${ev.comment?`<div class="result"><b>Commento della commissione:</b> ${esc(ev.comment)}</div>`:""}
+      <div class="keepgoing"><b>Non fermatevi qui.</b> Mancano ${G.parts.length-provate} ${G.parts.length-provate===1?"prova":"prove"}: ognuna vale altri ${G.parts[0].p} punti.</div>
+      ${consegnaHtml(G)}
+      ${nuove?`<p><span class="status wait">Nuove prove segnalate il ${new Date(sub.updated_at).toLocaleDateString("it-IT")}: in attesa di valutazione</span></p>`
+             :`<div class="row-actions"><button class="btn" id="markSent">Abbiamo inviato altre prove</button></div>`}`;
   } else {
     localForm = `${consegnaHtml(G)}
       ${sub?`<p><span class="status wait">Mail segnata come inviata il ${new Date(sub.updated_at).toLocaleDateString("it-IT")}: in attesa di valutazione</span></p>
-             <p class="muted small">Avete mandato altro materiale? Inviate un'altra mail con lo stesso oggetto.</p>`
+             <p class="muted small">Avete fatto altre prove? Inviate un'altra mail con lo stesso oggetto.</p>`
           :`<div class="row-actions"><button class="btn" id="markSent">Abbiamo inviato la mail</button></div>`}`;
   }
 
@@ -441,12 +470,13 @@ function openGoal(n){
         <h3>Sfida campana <span class="pts">fino a ${PTS_CAMPANA} punti</span></h3>
         <p class="q">${esc(C.q)}</p>
         ${C.nota?`<p class="muted small"><i>${esc(C.nota)}</i></p>`:""}
-        <p class="source"><b>Fonte:</b> ${srcHtml(C.src)}</p>
+        <p class="source"><b>Fonti da consultare:</b> ${srcHtml(C.src)}</p>
         ${campBlock}
       </section>
       <section class="m-sec">
-        <h3>Sfida locale: ${esc(G.lt)} <span class="pts">fino a ${LOCAL_MAX} punti</span></h3>
+        <h3>Sfida locale <span class="pts">fino a ${LOCAL_MAX} punti</span></h3>
         <p>${esc(G.ld)}</p>
+        <p class="muted small">3 prove sul vostro territorio, dalla più semplice alla più impegnativa. Ognuna vale ${G.parts[0].p} punti: potete farle tutte o solo alcune.</p>
         ${localBody}
         ${localForm}
       </section>
@@ -505,7 +535,7 @@ async function answerCampana(n){
 }
 
 async function markSent(n,btn){
-  if(!confirm("Confermate di aver inviato la mail con il materiale di questa sfida?")) return;
+  if(!confirm("Confermate di aver inviato la mail con il materiale delle prove?")) return;
   btn.disabled=true;
   const { data, error } = await sb.from("submissions")
     .upsert({ clan_id:uid(), goal:n, text:"Materiale inviato via email", links:[], updated_at:new Date().toISOString() }, { onConflict:"clan_id,goal" })
@@ -620,7 +650,7 @@ function renderBoard(){
   const all=S.board, rows=S.boardZona ? all.filter(r=>r.zona===S.boardZona) : all;
   const max=Math.max(1,...rows.map(r=>r.totale));
   let pos=0, prev=null;
-  $("#app").innerHTML = `<section class="hero"><p class="kicker">Strade 2030 · Il domani è oggi</p><h1>Classifica dei clan</h1><p>${all.length} clan in cammino. Domande globali e campane contano subito; i punti delle sfide locali compaiono appena la commissione le valuta.</p></section>
+  $("#app").innerHTML = `<section class="hero"><p class="kicker">Strade 2030 · Il domani è oggi</p><h1>Classifica dei clan</h1><p>${all.length} clan in cammino. Le domande globali contano subito; i punti delle sfide campane e locali compaiono appena la commissione le valuta.</p></section>
    <div class="filters"><select id="zf" aria-label="Filtra per zona" class="pill-select"><option value="">Tutte le zone</option>${ZONE.map(z=>`<option ${z===S.boardZona?"selected":""}>${esc(z)}</option>`).join("")}</select></div>
    <div class="panel board-panel" style="margin-bottom:60px">
     ${rows.length?`<ol class="lb">${rows.map((r,i)=>{ if(r.totale!==prev){pos=i+1;prev=r.totale;}
@@ -660,10 +690,10 @@ function renderGallery(){
 let futurePick=null;
 function renderFuture(){
   const head = `<section class="hero"><p class="kicker">Thinking of Campania · Il domani è oggi</p><h1>I vostri obiettivi di futuro</h1>
-    <p>Dopo aver percorso le strade dell'Agenda 2030, ogni clan sceglie <b>3 obiettivi</b> su cui vorrebbe impegnarsi in futuro. La scelta nasce da ciò che avete scoperto con le sfide: non dovete lavorare su tutti e 3, ma indicare dove volete mettere le vostre energie.</p></section>`;
+    <p>Dopo aver percorso le strade dell'Agenda 2030, ogni clan sceglie <b>3 obiettivi</b> su cui vorrebbe impegnarsi in futuro. La scelta nasce da ciò che avete scoperto con le sfide: non dovete lavorare su tutti e 3, ma indicare dove volete mettere le vostre energie. Potete cambiarli quando volete.</p></section>`;
   if(S.scelte===null){ $("#app").innerHTML = head+`<p>Caricamento…</p>`; loadScelte(); return; }
   const clanRows=S.scelte.filter(r=>r.livello==="clan");
-  const mine=clanRows.filter(r=>r.soggetto===uid());
+  const mine=clanRows.filter(r=>r.soggetto===uid());   // dal database arrivano solo le proprie
 
   // Parte del clan
   let mineHtml="";
@@ -684,30 +714,8 @@ function renderFuture(){
     }
   }
 
-  // Grafico pubblico
-  const counts=GOALS.map(G=>({G, n:clanRows.filter(r=>r.goal===G.n).length})).sort((a,b)=>b.n-a.n || a.G.n-b.G.n);
-  const maxC=Math.max(1,...counts.map(c=>c.n));
-  const nClan=new Set(clanRows.map(r=>r.soggetto)).size;
-  const chart = `<section class="panel">
-    <p class="kicker" style="margin:0 0 4px">Thinking of Comunità</p>
-    <h2>Quante volte è stato scelto ogni obiettivo</h2>
-    <p class="muted">${nClan} clan hanno scelto i loro 3 obiettivi.</p>
-    <ol class="hbars">${counts.map(({G,n})=>`<li>${sdg(G.n,"mini")}<span class="hb-label">${G.n}. ${esc(G.t)}</span><span class="hb-track"><i style="width:${n/maxC*100}%;background:${G.c}"></i></span><b>${n}</b></li>`).join("")}</ol>
-  </section>`;
-
-  // Elenco per zona
-  const byClan={};
-  clanRows.forEach(r=>{ (byClan[r.soggetto] ||= {nome:r.nome, zona:r.zona, grp:r.grp, goals:[]}).goals.push(r); });
-  const list=Object.values(byClan);
-  const zone=ZONE.filter(z=>list.some(c=>c.zona===z));
-  const listHtml = list.length ? zone.map(z=>`<section class="zone-block"><h2 class="zone-title">Zona ${esc(z)} <span>${list.filter(c=>c.zona===z).length}</span></h2>
-    <div class="choices">${list.filter(c=>c.zona===z).sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<article class="choice">
-      <h3>${esc(c.nome)}${c.grp?` <span>- ${esc(c.grp)}</span>`:""}</h3>
-      <div class="choice-icons">${c.goals.sort((a,b)=>a.goal-b.goal).map(r=>`<div>${sdg(r.goal)}${r.perche?`<p>${esc(r.perche)}</p>`:""}</div>`).join("")}</div>
-    </article>`).join("")}</div></section>`).join("")
-    : `<p class="muted">Ancora nessun clan ha scelto i suoi obiettivi.</p>`;
-
-  $("#app").innerHTML = head + `<div class="stack" style="padding-bottom:60px">${levelsHtml()}${mineHtml}${chart}${listHtml}${nextLevels()}</div>`;
+  const riservato = `<p class="muted small">Le scelte degli altri clan restano riservate: le scoprirete tutte insieme alla fine della sfida.</p>`;
+  $("#app").innerHTML = head + `<div class="stack" style="padding-bottom:60px">${levelsHtml()}${mineHtml}${riservato}${nextLevels()}</div>`;
 
   document.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{
     document.querySelectorAll("[data-why]").forEach(t=>futurePick[t.dataset.why]=t.value);
@@ -757,9 +765,9 @@ function renderRules(){
   $("#app").innerHTML = `<section class="hero"><p class="kicker">Strade 2030 · Thinking of Campania</p><h1>Come funziona</h1><p>Ogni obiettivo è una tappa con tre sfide. Potete affrontarle nell'ordine che volete e in quanto tempo volete. <button class="linkbtn" type="button" data-spirit>Lo spirito del gioco</button></p></section>
   <div class="rules" style="padding-bottom:24px">
     <div class="panel"><span class="big">${PTS_GLOBAL}</span><h3>Sfida globale</h3><p>Una domanda sul mondo. Un solo tentativo: risposta giusta, ${PTS_GLOBAL} punti; sbagliata, zero. Studiate e confrontatevi prima di confermare.</p></div>
-    <div class="panel"><span class="big">${PTS_CAMPANA}</span><h3>Sfida campana</h3><p>Una domanda sulla Campania, con la fonte dove cercare la risposta. Un solo tentativo: risposta giusta, ${PTS_CAMPANA} punti.</p></div>
-    <div class="panel"><span class="big">${LOCAL_MAX}</span><h3>Sfida locale</h3><p>Una missione sul vostro territorio. Ogni consegna ha il suo punteggio massimo e i criteri che contano. Raccogliete il materiale e inviatelo per email a ${esc(CONSEGNA.email||"gli organizzatori")}, una mail per sfida; la commissione vota consegna per consegna.</p></div>
+    <div class="panel"><span class="big">${PTS_CAMPANA}</span><h3>Sfida campana</h3><p>Una piccola ricerca sulla Campania: leggete le fonti indicate e scrivete la vostra risposta con i dati, l'anno e la fonte. La commissione assegna fino a ${PTS_CAMPANA} punti.</p></div>
+    <div class="panel"><span class="big">${LOCAL_MAX}</span><h3>Sfida locale</h3><p>3 prove sul vostro territorio, dalla più semplice alla più impegnativa, ${LOCAL_MAX/3} punti ciascuna. Potete farle tutte o solo alcune, anche in momenti diversi. Inviate il materiale per email a ${esc(CONSEGNA.email||"gli organizzatori")}; la commissione vota prova per prova.</p></div>
     <div class="panel"><span class="big">+${PTS_BONUS}</span><h3>Tappa completa</h3><p>Se su uno stesso obiettivo rispondete giusto alla domanda globale e ottenete punti nella sfida locale, ricevete un bonus di ${PTS_BONUS} punti.</p></div>
   </div>
-  <section class="panel" style="margin-bottom:60px"><h3>Obiettivi di futuro</h3><p>Quando avete risposto a tutte le 17 domande globali e a tutte le 17 domande campane, e avete consegnato almeno ${SBLOCCO_LOCALI===1?"una sfida locale":SBLOCCO_LOCALI+" sfide locali"}, si sblocca la pagina <b>Obiettivi di futuro</b>: lì il clan sceglie i 3 obiettivi su cui vuole impegnarsi, e tutti possono vedere le scelte.</p></section>`;
+  <section class="panel" style="margin-bottom:60px"><h3>Obiettivi di futuro</h3><p>Quando avete risposto a tutte le 17 domande globali e a tutte le 17 domande campane, e avete consegnato almeno ${SBLOCCO_LOCALI===1?"una sfida locale":SBLOCCO_LOCALI+" sfide locali"}, si sblocca la pagina <b>Obiettivi di futuro</b>: lì il clan sceglie i 3 obiettivi su cui vuole impegnarsi, e può cambiarli quando vuole. Le scelte di tutti i clan restano riservate fino alla fine della sfida. Poi la strada continua: ogni prova locale vi avvicina al traguardo.</p></section>`;
 }

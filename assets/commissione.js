@@ -49,10 +49,11 @@ async function loadAll(){
     sb.from("campana_evals").select("*"),
     sb.from("campana_key").select("*"),
     sb.from("richieste_accesso").select("*").order("created_at",{ascending:false}),
-    sb.rpc("classifica")
+    sb.rpc("classifica"),
+    sb.rpc("scelte_pubbliche")
   ]);
   const bad=r.find(x=>x.error); if(bad){ console.error(bad.error); toast("Errore nel caricamento. Hai eseguito l'aggiornamento del database?"); }
-  const [c,s,e,ca,ce,ck,rq,b]=r;
+  const [c,s,e,ca,ce,ck,rq,b,sc]=r;
   S.clans=Object.fromEntries((c.data||[]).map(x=>[x.id,x]));
   S.subs=s.data||[];
   S.evals=Object.fromEntries((e.data||[]).map(x=>[key(x.clan_id,x.goal),x]));
@@ -61,6 +62,7 @@ async function loadAll(){
   S.campKey=Object.fromEntries((ck.data||[]).map(x=>[x.goal,x]));
   S.reqs=rq.data||[];
   S.board=b.data||[];
+  S.scelte=sc.data||[];
   render();
 }
 
@@ -72,7 +74,7 @@ function render(){
   document.querySelectorAll("[data-view]").forEach(b=>b.setAttribute("aria-selected", b.dataset.view===S.view));
   const open=S.reqs.filter(r=>!r.gestita).length;
   $('[data-view="req"]').textContent = open ? `Richieste (${open})` : "Richieste";
-  ({local:renderLocal, campana:renderCampana, req:renderReq, clans:renderClans})[S.view]();
+  ({local:renderLocal, campana:renderCampana, future:renderFuturo, req:renderReq, clans:renderClans})[S.view]();
 }
 const clanOf = id => S.clans[id] || {name:"?", zona:"?"};
 const zonaOpts = () => `<option value="">Tutte le zone</option>${ZONE.map(z=>`<option ${z===S.zonaFilter?"selected":""}>${esc(z)}</option>`).join("")}`;
@@ -93,23 +95,22 @@ function bindFilters(rerender){
 /* ---------- Sfide locali: voto per consegna ---------- */
 function partInputs(parts, prefix, scores){
   return parts.map((p,i)=>{ const k=prefix+(i+1);
-    return `<label class="pin"><span>${esc(p.t)}<small>${p.k.map(esc).join(" · ")}</small></span>
+    return `<label class="pin"><span><b>Prova ${i+1} · ${esc(LIVELLI[i]||"")}</b> ${esc(p.t)}<small>${p.k.map(esc).join(" · ")}</small></span>
       <input type="number" min="0" max="${p.p}" step="1" data-k="${k}" data-max="${p.p}" value="${scores?.[k]??""}" placeholder="0–${p.p}"><em>/ ${p.p}</em></label>`; }).join("");
 }
 function computeLocal(G, scores){
   const val=(k,max)=>Math.max(0,Math.min(max,Math.round(+scores[k]||0)));
-  if(!G.acts) return G.parts.reduce((s,p,i)=>s+val("d"+(i+1),p.p),0);
-  const perAct=G.acts.map(A=>A.parts.reduce((s,p,i)=>s+val(A.id+(i+1),p.p),0)).sort((a,b)=>b-a);
-  return perAct.slice(0,G.choose).reduce((s,x)=>s+x,0);
+  return G.parts.reduce((s,p,i)=>s+val("d"+(i+1),p.p),0);
 }
 function renderLocal(){
   const all=S.subs.map(s=>({s, ev:S.evals[key(s.clan_id,s.goal)], clan:clanOf(s.clan_id)}))
     .filter(x=>(!S.goalFilter || x.s.goal===S.goalFilter) && (!S.zonaFilter || x.clan.zona===S.zonaFilter));
-  const pend=all.filter(x=>!x.ev), done=all.filter(x=>x.ev);
+  const isNew=x=>!x.ev || new Date(x.s.updated_at) > new Date(x.ev.evaluated_at);
+  const pend=all.filter(isNew), done=all.filter(x=>!isNew(x));
   const list=S.filter==="pending"?pend:S.filter==="done"?done:all;
   const goalSel=`<select id="gf" ${selStyle} aria-label="Filtra per obiettivo"><option value="0">Tutti gli obiettivi</option>${GOALS.map(G=>`<option value="${G.n}" ${S.goalFilter===G.n?"selected":""}>${G.n}. ${esc(G.t)}</option>`).join("")}</select>`;
   const clanOpts=Object.values(S.clans).sort((a,b)=>a.zona.localeCompare(b.zona)||a.name.localeCompare(b.name)).map(c=>`<option value="${esc(c.id)}">${esc(c.zona)} · ${esc(c.name)}</option>`).join("");
-  $("#app").innerHTML = `<section class="hero"><h1>Sfide locali</h1><p>I clan mandano il materiale a ${esc(CONSEGNA.email||"l'email del progetto")}, una mail per sfida, e premono "Abbiamo inviato la mail". Qui dai un voto per ogni consegna: il totale (massimo ${LOCAL_MAX}) e la classifica si calcolano da soli. Per l'obiettivo 3 contano le ${goal(3).choose} attività con il voto più alto.</p></section>
+  $("#app").innerHTML = `<section class="hero"><h1>Sfide locali</h1><p>I clan mandano il materiale a ${esc(CONSEGNA.email||"l'email del progetto")}, con l'oggetto della sfida, e premono "Abbiamo inviato la mail". Ogni sfida ha ${goal(1).parts.length} prove da 0 a ${goal(1).parts[0].p} punti: lascia vuote quelle non consegnate. Il totale (massimo ${LOCAL_MAX}) e la classifica si calcolano da soli. Se un clan manda altre prove dopo la valutazione, la sfida torna tra quelle da valutare.</p></section>
    <details class="panel add-sub"><summary><b>Il clan ha mandato la mail ma non compare qui?</b> Registra tu la consegna</summary>
      <div class="row-actions"><select id="asClan" ${selStyle} style="width:auto;max-width:100%"><option value="">Clan…</option>${clanOpts}</select>
      <select id="asGoal" ${selStyle} style="width:auto"><option value="">Obiettivo…</option>${GOALS.map(G=>`<option value="${G.n}">${G.n}. ${esc(G.t)}</option>`).join("")}</select>
@@ -118,16 +119,14 @@ function renderLocal(){
    <div class="stack" style="padding-bottom:60px">
    ${list.length ? list.map(x=>{ const G=goal(x.s.goal), sc=x.ev?.criteria||{}, s=x.s;
      const updatedAfter = x.ev && new Date(s.updated_at) > new Date(x.ev.evaluated_at);
-     const inputs = G.acts
-       ? G.acts.map(A=>`<div class="act-in"><b>${A.id} · ${esc(A.t)}</b>${partInputs(A.parts, A.id, sc)}</div>`).join("")
-       : partInputs(G.parts, "d", sc);
+     const inputs = partInputs(G.parts, "d", sc);
      return `<article class="adm-item" data-c="${esc(s.clan_id)}" data-g="${s.goal}">
-      <div class="adm-head"><span class="goal-dot" style="background:${G.c}">${G.n}</span><b>${esc(x.clan.name)}</b><span class="muted">Zona ${esc(x.clan.zona)}${x.clan.grp?" · "+esc(x.clan.grp):""} · ${esc(G.lt)}</span>
-        <span class="status ${x.ev?"ok":"wait"}" data-st style="margin-left:auto">${x.ev?`${x.ev.points} pt`:"Da valutare"}</span></div>
+      <div class="adm-head"><span class="goal-dot" style="background:${G.c}">${G.n}</span><b>${esc(x.clan.name)}</b><span class="muted">Zona ${esc(x.clan.zona)}${x.clan.grp?" · "+esc(x.clan.grp):""} · Sfida locale</span>
+        <span class="status ${x.ev&&!updatedAfter?"ok":"wait"}" data-st style="margin-left:auto">${x.ev?`${x.ev.points} pt${updatedAfter?" · nuove prove":""}`:"Da valutare"}</span></div>
       <div class="mailbox"><span>Materiale nella mail con oggetto</span> <span class="subject">${esc(subjectOf(x.clan,G))}</span>
         <a class="btn ghost small" href="${esc(gmailSearch(x.clan,G))}" target="_blank" rel="noopener">Cerca in Gmail</a></div>
       ${s.text && !/^Materiale inviato via email$|^Registrata dalla commissione$/.test(s.text)?`<p class="pre muted small" style="margin:0">${esc(s.text)}</p>${linksHtml(s.links)}`:""}
-      <small class="muted">${s.text==="Registrata dalla commissione"?"Registrata dalla commissione":"Segnata come inviata"} il ${new Date(s.updated_at).toLocaleString("it-IT")}${updatedAfter?" · aggiornata dopo la valutazione":""}</small>
+      <small class="muted">${s.text==="Registrata dalla commissione"?"Registrata dalla commissione":"Segnata come inviata"} il ${new Date(s.updated_at).toLocaleString("it-IT")}${updatedAfter?" · il clan ha segnalato nuove prove dopo la valutazione":""}</small>
       <div class="pins">${inputs}</div>
       <p class="total-line">Totale sfida: <b data-total>${computeLocal(G, sc)}</b> / ${LOCAL_MAX}</p>
       <label class="f small">Commento per il clan<textarea style="min-height:60px" data-comment maxlength="1000">${esc(x.ev?.comment||"")}</textarea></label>
@@ -194,7 +193,7 @@ function renderCampana(){
        <div><button class="btn small ghost" id="saveKey">Salva risposta giusta e spiegazione</button> <span class="muted small">Se cambi la risposta giusta, i punti dei clan vengono ricalcolati.</span></div>`
     : `<label class="f">Risposta di riferimento <span class="h">Riservata alla commissione: i clan non la vedono mai.</span><textarea id="refTxt" maxlength="4000" style="min-height:90px" placeholder="Inserite qui la risposta verificata e i criteri per assegnare i punti">${esc(K.reference||"")}</textarea></label>
        <div><button class="btn small ghost" id="saveRef">Salva risposta di riferimento</button></div>`;
-  $("#app").innerHTML = `<section class="hero"><h1>Sfide campane</h1><p>Domande a risposta multipla (punti automatici) o aperte (da 0 a ${PTS_CAMPANA} punti, li dai tu).</p></section>
+  $("#app").innerHTML = `<section class="hero"><h1>Sfide campane</h1><p>Ricerche sulla Campania a risposta aperta: confronta la risposta del clan con quella di riferimento e dai da 0 a ${PTS_CAMPANA} punti. Contano dati corretti, anno e fonte citati.</p></section>
    <div class="goal-tabs">${GOALS.map(X=>`<button data-cg="${X.n}" aria-pressed="${X.n===g}" style="--c:${X.c}">${X.n}${pendAll[X.n-1]?`<sup>${pendAll[X.n-1]}</sup>`:""}</button>`).join("")}</div>
    <section class="panel stack" style="margin-bottom:16px">
      <h2>${G.n}. ${esc(G.t)}</h2>
@@ -359,4 +358,41 @@ function downloadCsv(rows,pts){
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
   a.download=`classifica-strade2030-${new Date().toISOString().slice(0,10)}.csv`; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+
+/* ---------- Obiettivi di futuro: resoconto riservato alla commissione ---------- */
+function sdgBox(n, cls=""){
+  const G=goal(n);
+  return `<span class="sdg ${cls}" style="--c:${G.c}" title="${n}. ${esc(G.t)}"><b>${n}</b><i>${esc(G.t)}</i></span>`;
+}
+function renderFuturo(){
+  const rows=(S.scelte||[]).filter(r=>r.livello==="clan" && (!S.zonaFilter || r.zona===S.zonaFilter));
+  const counts=GOALS.map(G=>({G, n:rows.filter(r=>r.goal===G.n).length})).sort((a,b)=>b.n-a.n || a.G.n-b.G.n);
+  const maxC=Math.max(1,...counts.map(c=>c.n));
+  const byClan={};
+  rows.forEach(r=>{ (byClan[r.soggetto] ||= {nome:r.nome, zona:r.zona, grp:r.grp, goals:[]}).goals.push(r); });
+  const list=Object.values(byClan);
+  const zone=ZONE.filter(z=>list.some(c=>c.zona===z));
+  $("#app").innerHTML = `<section class="hero"><h1>Obiettivi di futuro</h1><p>Le scelte dei clan. <b>Sono visibili solo qui</b>: ogni clan vede soltanto le proprie, così nessuno si fa influenzare. Mostratele a tutti alla fine della sfida.</p></section>
+   <div class="filters"><select id="zf" ${selStyle} aria-label="Filtra per zona">${zonaOpts()}</select><button class="btn ghost small" id="csvF" type="button">Scarica per Excel</button></div>
+   <div class="stack" style="padding-bottom:60px">
+   <section class="panel"><h2>Quante volte è stato scelto ogni obiettivo</h2>
+    <p class="muted">${list.length} clan${S.zonaFilter?" della zona "+esc(S.zonaFilter):""} hanno scelto i loro 3 obiettivi.</p>
+    <ol class="hbars">${counts.map(({G,n})=>`<li>${sdgBox(G.n,"mini")}<span class="hb-label">${G.n}. ${esc(G.t)}</span><span class="hb-track"><i style="width:${n/maxC*100}%;background:${G.c}"></i></span><b>${n}</b></li>`).join("")}</ol>
+   </section>
+   ${list.length ? zone.map(z=>`<section class="zone-block"><h2 class="zone-title">Zona ${esc(z)} <span>${list.filter(c=>c.zona===z).length}</span></h2>
+    <div class="choices">${list.filter(c=>c.zona===z).sort((a,b)=>a.nome.localeCompare(b.nome)).map(c=>`<article class="choice">
+      <h3>${esc(c.nome)}${c.grp?` <span>- ${esc(c.grp)}</span>`:""}</h3>
+      <div class="choice-icons">${c.goals.sort((a,b)=>a.goal-b.goal).map(r=>`<div>${sdgBox(r.goal)}${r.perche?`<p>${esc(r.perche)}</p>`:""}</div>`).join("")}</div>
+    </article>`).join("")}</div></section>`).join("")
+    : `<p class="muted">Ancora nessun clan ha scelto i suoi obiettivi.</p>`}
+   </div>`;
+  $("#zf").onchange=e=>{ S.zonaFilter=e.target.value; renderFuturo(); };
+  $("#csvF").onclick=()=>{
+    const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+    const lines=[["Zona","Clan","Gruppo","Obiettivo","Nome obiettivo","Perché"].map(q).join(";")];
+    rows.forEach(r=>lines.push([r.zona,r.nome,r.grp,r.goal,goal(r.goal).t,r.perche].map(q).join(";")));
+    const blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"});
+    const u=URL.createObjectURL(blob), l=document.createElement("a"); l.href=u; l.download="obiettivi-di-futuro.csv"; l.click(); URL.revokeObjectURL(u);
+  };
 }
