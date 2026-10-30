@@ -156,3 +156,11 @@ Metti le 17 icone in `assets/img/sdg/` con i nomi `goal-1.png` ... `goal-17.png`
 - Punti di domanda globale, campana e bonus: `goals.js` **e** la funzione `classifica` nel database.
 - Zone: `goals.js` **e** il vincolo `clans_zona_check` nel database.
 - Numero di sfide locali per lo sblocco: `SBLOCCO_LOCALI` in `goals.js` **e** la funzione `stato_sblocco` nel database.
+
+## Aggiornamento 3 · Campane a risposta multipla, sfide locali solo via email
+
+1. Supabase > **SQL Editor** > *New query*: incolla tutto `supabase/aggiornamento-3.sql` e premi **Run**. Non cancella dati.
+2. Carica su GitHub tutto il contenuto della cartella.
+
+- **Domande campane 1-17** tutte a risposta multipla: un tentativo, 10 punti automatici, fonte visibile sotto la domanda. Le risposte giuste e le spiegazioni sono solo nel database (tabella `campana_key`); la commissione può cambiarle dalla scheda **Campane** e i punti si ricalcolano. Per cambiare una domanda: testo e opzioni in `goals.js`, risposta giusta e spiegazione dalla scheda Campane della commissione.
+- **Sfide locali**: niente più racconto e link nel sito. I clan mandano tutto a strade2030@gmail.com, una mail per sfida con l'oggetto indicato, e premono "Abbiamo inviato la mail". In commissione ogni consegna ha il pulsante **Cerca in Gmail**; se un clan dimentica il tasto, puoi registrare tu la consegna.

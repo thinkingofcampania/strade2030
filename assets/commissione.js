@@ -108,7 +108,12 @@ function renderLocal(){
   const pend=all.filter(x=>!x.ev), done=all.filter(x=>x.ev);
   const list=S.filter==="pending"?pend:S.filter==="done"?done:all;
   const goalSel=`<select id="gf" ${selStyle} aria-label="Filtra per obiettivo"><option value="0">Tutti gli obiettivi</option>${GOALS.map(G=>`<option value="${G.n}" ${S.goalFilter===G.n?"selected":""}>${G.n}. ${esc(G.t)}</option>`).join("")}</select>`;
-  $("#app").innerHTML = `<section class="hero"><h1>Sfide locali</h1><p>Un voto per ogni consegna: il totale della sfida (massimo ${LOCAL_MAX}) e la classifica si calcolano da soli. Per l'obiettivo 3 contano le ${goal(3).choose} attività con il voto più alto.</p></section>
+  const clanOpts=Object.values(S.clans).sort((a,b)=>a.zona.localeCompare(b.zona)||a.name.localeCompare(b.name)).map(c=>`<option value="${esc(c.id)}">${esc(c.zona)} · ${esc(c.name)}</option>`).join("");
+  $("#app").innerHTML = `<section class="hero"><h1>Sfide locali</h1><p>I clan mandano il materiale a ${esc(CONSEGNA.email||"l'email del progetto")}, una mail per sfida, e premono "Abbiamo inviato la mail". Qui dai un voto per ogni consegna: il totale (massimo ${LOCAL_MAX}) e la classifica si calcolano da soli. Per l'obiettivo 3 contano le ${goal(3).choose} attività con il voto più alto.</p></section>
+   <details class="panel add-sub"><summary><b>Il clan ha mandato la mail ma non compare qui?</b> Registra tu la consegna</summary>
+     <div class="row-actions"><select id="asClan" ${selStyle} style="width:auto;max-width:100%"><option value="">Clan…</option>${clanOpts}</select>
+     <select id="asGoal" ${selStyle} style="width:auto"><option value="">Obiettivo…</option>${GOALS.map(G=>`<option value="${G.n}">${G.n}. ${esc(G.t)}</option>`).join("")}</select>
+     <button class="btn small" id="asBtn">Registra consegna</button></div></details>
    ${filterBar(pend.length, done.length, all.length, goalSel)}
    <div class="stack" style="padding-bottom:60px">
    ${list.length ? list.map(x=>{ const G=goal(x.s.goal), sc=x.ev?.criteria||{}, s=x.s;
@@ -119,10 +124,10 @@ function renderLocal(){
      return `<article class="adm-item" data-c="${esc(s.clan_id)}" data-g="${s.goal}">
       <div class="adm-head"><span class="goal-dot" style="background:${G.c}">${G.n}</span><b>${esc(x.clan.name)}</b><span class="muted">Zona ${esc(x.clan.zona)}${x.clan.grp?" · "+esc(x.clan.grp):""} · ${esc(G.lt)}</span>
         <span class="status ${x.ev?"ok":"wait"}" data-st style="margin-left:auto">${x.ev?`${x.ev.points} pt`:"Da valutare"}</span></div>
-      <p class="pre" style="margin:0">${esc(s.text)}</p>
-      ${linksHtml(s.links)}
-      ${s.photos?.length?`<p class="muted small">${s.photos.length} foto caricate con la versione precedente del sito.</p>`:""}
-      <small class="muted">Consegnata il ${new Date(s.updated_at).toLocaleString("it-IT")}${updatedAfter?" · aggiornata dopo la valutazione":""}</small>
+      <div class="mailbox"><span>Materiale nella mail con oggetto</span> <span class="subject">${esc(subjectOf(x.clan,G))}</span>
+        <a class="btn ghost small" href="${esc(gmailSearch(x.clan,G))}" target="_blank" rel="noopener">Cerca in Gmail</a></div>
+      ${s.text && !/^Materiale inviato via email$|^Registrata dalla commissione$/.test(s.text)?`<p class="pre muted small" style="margin:0">${esc(s.text)}</p>${linksHtml(s.links)}`:""}
+      <small class="muted">${s.text==="Registrata dalla commissione"?"Registrata dalla commissione":"Segnata come inviata"} il ${new Date(s.updated_at).toLocaleString("it-IT")}${updatedAfter?" · aggiornata dopo la valutazione":""}</small>
       <div class="pins">${inputs}</div>
       <p class="total-line">Totale sfida: <b data-total>${computeLocal(G, sc)}</b> / ${LOCAL_MAX}</p>
       <label class="f small">Commento per il clan<textarea style="min-height:60px" data-comment maxlength="1000">${esc(x.ev?.comment||"")}</textarea></label>
@@ -132,12 +137,24 @@ function renderLocal(){
    </div>`;
   bindFilters(renderLocal);
   $("#gf").onchange=e=>{ S.goalFilter=+e.target.value; renderLocal(); };
+  $("#asBtn").onclick=async e=>{
+    const clan_id=$("#asClan").value, g=+$("#asGoal").value;
+    if(!clan_id || !g) return toast("Scegli clan e obiettivo.");
+    if(S.subs.some(x=>x.clan_id===clan_id && x.goal===g)) return toast("Questa consegna c'è già nell'elenco.");
+    e.target.disabled=true;
+    const { data, error } = await sb.from("submissions").insert({ clan_id, goal:g, text:"Registrata dalla commissione", links:[] }).select().single();
+    e.target.disabled=false;
+    if(error){ console.error(error); return toast("Non registrata. Hai eseguito l'aggiornamento 3 del database?"); }
+    S.subs.push(data); S.filter="pending"; S.goalFilter=g; renderLocal(); toast("Consegna registrata: ora puoi valutarla");
+  };
   document.querySelectorAll(".adm-item").forEach(card=>{
     const G=goal(+card.dataset.g);
     card.addEventListener("input",()=>{ card.querySelector("[data-total]").textContent=computeLocal(G, readScores(card)); });
     card.querySelector("[data-save]").onclick=e=>saveLocal(card,e.target);
   });
 }
+function subjectOf(c,G){ return `${c.zona} - ${c.name} - Obiettivo ${G.n} - Sfida locale`; }
+function gmailSearch(c,G){ return "https://mail.google.com/mail/u/0/#search/" + encodeURIComponent(`subject:("${c.name}" "Obiettivo ${G.n}")`); }
 function readScores(card){
   const sc={};
   card.querySelectorAll("[data-k]").forEach(i=>{ if(i.value!=="") sc[i.dataset.k]=Math.max(0,Math.min(+i.dataset.max,Math.round(+i.value||0))); });
@@ -169,32 +186,50 @@ function renderCampana(){
   const pend=all.filter(x=>!x.ev), done=all.filter(x=>x.ev);
   const list=S.filter==="pending"?pend:S.filter==="done"?done:all;
   const pendAll=GOALS.map(X=>S.camp.filter(a=>a.goal===X.n && !S.campEvals[key(a.clan_id,a.goal)]).length);
-  $("#app").innerHTML = `<section class="hero"><h1>Sfide campane</h1><p>Risposte aperte, da 0 a ${PTS_CAMPANA} punti. La risposta di riferimento la vede solo la commissione.</p></section>
+  const mc=!!C.o, K=S.campKey[g]||{};
+  const keyPanel = mc
+    ? `<p class="muted small" style="margin:0">Domanda a risposta multipla: il punteggio si assegna da solo. La risposta giusta è salvata solo nel database.</p>
+       <div class="opts">${C.o.map((o,i)=>`<label class="opt ${K.correct===i?"right":""}"><input type="radio" name="kc" value="${i}" ${K.correct===i?"checked":""}> ${esc(o)}</label>`).join("")}</div>
+       <label class="f">Spiegazione mostrata ai clan dopo la risposta<textarea id="kFb" maxlength="1000" style="min-height:70px">${esc(K.feedback||"")}</textarea></label>
+       <div><button class="btn small ghost" id="saveKey">Salva risposta giusta e spiegazione</button> <span class="muted small">Se cambi la risposta giusta, i punti dei clan vengono ricalcolati.</span></div>`
+    : `<label class="f">Risposta di riferimento <span class="h">Riservata alla commissione: i clan non la vedono mai.</span><textarea id="refTxt" maxlength="4000" style="min-height:90px" placeholder="Inserite qui la risposta verificata e i criteri per assegnare i punti">${esc(K.reference||"")}</textarea></label>
+       <div><button class="btn small ghost" id="saveRef">Salva risposta di riferimento</button></div>`;
+  $("#app").innerHTML = `<section class="hero"><h1>Sfide campane</h1><p>Domande a risposta multipla (punti automatici) o aperte (da 0 a ${PTS_CAMPANA} punti, li dai tu).</p></section>
    <div class="goal-tabs">${GOALS.map(X=>`<button data-cg="${X.n}" aria-pressed="${X.n===g}" style="--c:${X.c}">${X.n}${pendAll[X.n-1]?`<sup>${pendAll[X.n-1]}</sup>`:""}</button>`).join("")}</div>
    <section class="panel stack" style="margin-bottom:16px">
      <h2>${G.n}. ${esc(G.t)}</h2>
      <p class="q" style="margin:0">${esc(C.q)}</p>
      ${C.nota?`<p class="muted small" style="margin:0"><i>${esc(C.nota)}</i></p>`:""}
      <p class="source" style="margin:0"><b>Fonte:</b> ${C.src.map(([n,u])=>u?`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`:esc(n)).join(" · ")}</p>
-     <label class="f">Risposta di riferimento <span class="h">Riservata alla commissione: i clan non la vedono mai.</span><textarea id="refTxt" maxlength="4000" style="min-height:90px" placeholder="Inserite qui la risposta verificata e i criteri per assegnare i punti">${esc(S.campKey[g]?.reference||"")}</textarea></label>
-     <div><button class="btn small ghost" id="saveRef">Salva risposta di riferimento</button></div>
+     ${keyPanel}
    </section>
    ${filterBar(pend.length, done.length, all.length)}
    <div class="stack" style="padding-bottom:60px">
    ${list.length? list.map(x=>`<article class="adm-item" data-c="${esc(x.a.clan_id)}">
       <div class="adm-head"><b>${esc(x.clan.name)}</b><span class="muted">Zona ${esc(x.clan.zona)}${x.clan.grp?" · "+esc(x.clan.grp):""}</span>
         <span class="status ${x.ev?"ok":"wait"}" data-st style="margin-left:auto">${x.ev?`${x.ev.points} pt`:"Da valutare"}</span></div>
-      <p class="pre" style="margin:0">${esc(x.a.answer)}</p>
+      <p class="pre" style="margin:0">${mc && x.a.choice!=null ? esc(C.o[x.a.choice]||x.a.answer) : esc(x.a.answer)}</p>
       <small class="muted">Inviata il ${new Date(x.a.updated_at).toLocaleString("it-IT")}</small>
-      <div class="pins"><label class="pin"><span>Punteggio</span><input type="number" min="0" max="${PTS_CAMPANA}" step="1" data-pts value="${x.ev?.points??""}" placeholder="0–${PTS_CAMPANA}"><em>/ ${PTS_CAMPANA}</em></label></div>
+      ${mc?"":`<div class="pins"><label class="pin"><span>Punteggio</span><input type="number" min="0" max="${PTS_CAMPANA}" step="1" data-pts value="${x.ev?.points??""}" placeholder="0–${PTS_CAMPANA}"><em>/ ${PTS_CAMPANA}</em></label></div>
       <label class="f small">Commento per il clan<textarea style="min-height:50px" data-comment maxlength="1000">${esc(x.ev?.comment||"")}</textarea></label>
-      <div><button class="btn small" data-save>${x.ev?"Aggiorna valutazione":"Salva valutazione"}</button></div>
+      <div><button class="btn small" data-save>${x.ev?"Aggiorna valutazione":"Salva valutazione"}</button></div>`}
     </article>`).join("")
    : `<p class="muted">Nessuna risposta in questa vista.</p>`}
    </div>`;
   document.querySelectorAll("[data-cg]").forEach(b=>b.onclick=()=>{ S.campGoal=+b.dataset.cg; renderCampana(); });
   bindFilters(renderCampana);
-  $("#saveRef").onclick=async e=>{
+  const sk=$("#saveKey"); if(sk) sk.onclick=async e=>{
+    const sel=document.querySelector('input[name="kc"]:checked');
+    if(!sel) return toast("Scegli la risposta giusta.");
+    if(K.correct!=null && +sel.value!==K.correct && !confirm("Cambiare la risposta giusta? I punti di tutti i clan che hanno già risposto verranno ricalcolati.")) return;
+    e.target.disabled=true;
+    const { data, error } = await sb.from("campana_key").upsert({ goal:g, correct:+sel.value, feedback:$("#kFb").value.trim()||null, updated_at:new Date().toISOString() },{ onConflict:"goal" }).select().single();
+    if(!error) await sb.rpc("ricalcola_campana",{ p_goal:g });
+    e.target.disabled=false;
+    if(error){ console.error(error); return toast("Non salvata, riprova."); }
+    S.campKey[g]=data; toast("Risposta giusta salvata"); await loadAll();
+  };
+  const sr=$("#saveRef"); if(sr) sr.onclick=async e=>{
     e.target.disabled=true;
     const { data, error } = await sb.from("campana_key").upsert({ goal:g, reference:$("#refTxt").value.trim()||null, updated_at:new Date().toISOString() },{ onConflict:"goal" }).select().single();
     e.target.disabled=false;

@@ -7,7 +7,7 @@ let sb = null;
 const TABS = { "#clan":"gallery", "#futuro":"future", "#classifica":"board", "#regole":"rules" };
 const S = {
   session:null, clan:null,
-  answers:{}, campane:{}, campEvals:{}, subs:{}, evals:{}, sblocco:null,
+  answers:{}, campane:{}, campEvals:{}, campMC:{}, subs:{}, evals:{}, sblocco:null,
   board:[], boardZona:"", gallery:null, scelte:null,
   tab: TABS[location.hash] || "map",
   authMode:"register", newCode:null, openGoal:null, dirty:false, loaded:false
@@ -46,14 +46,15 @@ function progress(){
 
 async function loadAll(){
   const id = uid();
-  const [c,a,ca,ce,s,e,st] = await Promise.all([
+  const [c,a,ca,ce,s,e,st,cmc] = await Promise.all([
     sb.from("clans").select("*").eq("id",id).maybeSingle(),
     sb.rpc("mie_risposte"),
     sb.from("campana_answers").select("*").eq("clan_id",id),
     sb.from("campana_evals").select("*").eq("clan_id",id),
     sb.from("submissions").select("*").eq("clan_id",id),
     sb.from("evaluations").select("*").eq("clan_id",id),
-    sb.rpc("stato_sblocco")
+    sb.rpc("stato_sblocco"),
+    sb.rpc("mie_campane")
   ]);
   const bad=[c,a,ca,ce,s,e,st].find(r=>r.error);
   if(bad){ console.error(bad.error); toast("Problema di connessione: ricarica la pagina."); }
@@ -62,6 +63,7 @@ async function loadAll(){
   S.answers=byGoal(a.data); S.campane=byGoal(ca.data); S.campEvals=byGoal(ce.data);
   S.subs=byGoal(s.data); S.evals=byGoal(e.data);
   S.sblocco = (st.data||[])[0] || null;
+  S.campMC = byGoal(cmc.data);
   await loadBoard(false);
   S.loaded = true; render();
 }
@@ -100,7 +102,7 @@ document.addEventListener("click", e=>{
 });
 $("#logout").onclick = async ()=>{
   await sb.auth.signOut();
-  Object.assign(S,{session:null,clan:null,answers:{},campane:{},campEvals:{},subs:{},evals:{},sblocco:null,tab:"map",authMode:"login"});
+  Object.assign(S,{session:null,clan:null,answers:{},campane:{},campEvals:{},campMC:{},subs:{},evals:{},sblocco:null,tab:"map",authMode:"login"});
   render();
 };
 
@@ -299,8 +301,9 @@ function renderComplete(){
 function tileMarks(n){
   const a=S.answers[n];
   const g = !a ? `<span class="mark">Globale</span>` : (a.answer===a.correct ? `<span class="mark done">Globale ✓</span>` : `<span class="mark miss">Globale ✗</span>`);
-  const ce=S.campEvals[n], ca=S.campane[n];
-  const c = ce ? `<span class="mark done">Campana ${ce.points}</span>` : ca ? `<span class="mark sent">Campana ✓</span>` : `<span class="mark">Campana</span>`;
+  const ce=S.campEvals[n], ca=S.campane[n], cm=S.campMC[n];
+  const c = cm ? (cm.choice===cm.correct ? `<span class="mark done">Campana ✓</span>` : `<span class="mark miss">Campana ✗</span>`)
+    : ce ? `<span class="mark done">Campana ${ce.points}</span>` : ca ? `<span class="mark sent">Campana ✓</span>` : `<span class="mark">Campana</span>`;
   const e=S.evals[n], s=S.subs[n];
   const l = e ? `<span class="mark done">Locale ${e.points}</span>` : s ? `<span class="mark sent">Locale inviata</span>` : `<span class="mark">Locale</span>`;
   return g+c+l;
@@ -332,7 +335,7 @@ function renderMap(){
 }
 
 /* ---------- Scheda obiettivo ---------- */
-let pendingChoice=null;
+let pendingChoice=null, pendingCamp=null;
 const partsHtml = (parts, prefix, scores) => `<ol class="parts">${parts.map((p,i)=>{
   const k=prefix+(i+1), sc=scores?.[k];
   return `<li><div class="part-top"><span>${esc(p.t)}</span><span class="pmax">${sc!=null?`<b>${sc}</b>/`:"max "}${p.p}</span></div>
@@ -340,35 +343,30 @@ const partsHtml = (parts, prefix, scores) => `<ol class="parts">${parts.map((p,i
 function srcHtml(src){
   return src.map(([n,u])=>u&&safeUrl(u) ? `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(n)}</a>` : esc(n)).join(" · ");
 }
+function mailSubject(G){ const c=S.clan; return `${c.zona} - ${c.name} - Obiettivo ${G.n} - Sfida locale`; }
 function consegnaHtml(G){
-  const c=S.clan, sfida="Locale", obiettivo=`${G.n} - ${G.t}`;
-  const subject=`${c.zona} - ${c.name} - Obiettivo ${G.n} - Sfida locale`;
+  const c=S.clan, subject=mailSubject(G);
   const regole=`<ul class="deliver small">
-      <li>File oltre ${CONSEGNA.limiteMB} MB: non allegateli. Caricateli su Google Drive, WeTransfer o Dropbox e incollate il link, con accesso "chiunque abbia il link".</li>
-      <li>Video: meglio compressi, oppure su YouTube come "non in elenco", e incollate il link.</li>
-      <li>Scrivete cosa contiene ogni file.</li></ul>`;
-  let how;
-  if(CONSEGNA.modo==="modulo" && safeUrl(CONSEGNA.modulo)){
-    const url=CONSEGNA.modulo.replace(/ZONA/g,encodeURIComponent(c.zona)).replace(/CLAN/g,encodeURIComponent(c.name))
-      .replace(/CODICE/g,encodeURIComponent(c.code)).replace(/OBIETTIVO/g,encodeURIComponent(obiettivo)).replace(/SFIDA/g,encodeURIComponent(sfida));
-    how=`<p><b>2. Caricate i materiali</b> (foto, documenti, mappe) nel modulo: zona, clan, obiettivo e sfida sono già compilati.</p>
-      <a class="btn small" href="${esc(url)}" target="_blank" rel="noopener noreferrer">Carica i materiali</a>${regole}`;
-  } else if(CONSEGNA.modo==="email" && emailOk(CONSEGNA.email||"")){
-    const body=`Clan: ${c.name}\nGruppo: ${c.grp||""}\nZona: ${c.zona}\nCodice: ${c.code}\nObiettivo ${obiettivo} - Sfida locale\n\nContenuto dei file:\n- `;
-    const mail=`mailto:${CONSEGNA.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    how=`<p><b>2. Inviate i materiali per email</b> a <b>${esc(CONSEGNA.email)}</b>, una mail per sfida, con questo oggetto:</p>
-      <p class="subject">${esc(subject)}</p>
-      <a class="btn small" href="${esc(mail)}">Scrivi la mail</a>${regole}`;
-  } else {
-    how=`<p><b>2. Materiali:</b> le istruzioni per inviare foto e video arriveranno a breve dagli organizzatori. Intanto potete incollare qui sotto i link alle vostre cartelle.</p>`;
+      <li>Una mail per sfida, con l'oggetto qui sopra.</li>
+      <li>Nel testo della mail scrivete cosa contiene ogni file e a quale consegna si riferisce (1, 2, 3${G.acts?", e quali attività avete svolto":""}).</li>
+      <li>File oltre ${CONSEGNA.limiteMB} MB: non allegateli. Caricateli su Google Drive, WeTransfer o Dropbox e incollate il link nella mail, con accesso "chiunque abbia il link".</li>
+      <li>Video: meglio compressi, oppure su YouTube come "non in elenco".</li></ul>`;
+  if(!(CONSEGNA.modo==="email" && emailOk(CONSEGNA.email||""))){
+    return `<div class="howto"><h4>Come consegnare</h4><p>Le istruzioni per inviare il materiale arriveranno a breve dagli organizzatori.</p></div>`;
   }
+  const body=`Clan: ${c.name}\nGruppo: ${c.grp||""}\nZona: ${c.zona}\nCodice: ${c.code}\nObiettivo ${G.n} - ${G.t} - Sfida locale\n${G.acts?"\nAttività svolte (A, B, C, D): \n":""}\nContenuto dei file:\n1. \n2. \n3. \n`;
+  const mail=`mailto:${CONSEGNA.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   return `<div class="howto"><h4>Come consegnare</h4>
-    <p><b>1. Raccontate qui sotto</b> cosa avete fatto e incollate i link (mappe, video): è la vostra consegna ufficiale.</p>${how}</div>`;
+    <p><b>1. Raccogliete il materiale</b> di tutte le consegne qui sopra.</p>
+    <p><b>2. Inviatelo per email</b> a <b>${esc(CONSEGNA.email)}</b> con questo oggetto:</p>
+    <p class="subject">${esc(subject)}</p>
+    <a class="btn small" href="${esc(mail)}">Scrivi la mail</a>${regole}
+    <p><b>3. Avvisateci qui</b> premendo "Abbiamo inviato la mail": così la commissione sa che c'è materiale da valutare.</p></div>`;
 }
 
 function openGoal(n){
   const G=goal(n), dlg=$("#goalDlg");
-  if(S.openGoal!==n) pendingChoice=null;
+  if(S.openGoal!==n){ pendingChoice=null; pendingCamp=null; }
   S.openGoal=n; S.dirty=false;
   const a=S.answers[n], answered=!!a;
 
@@ -382,9 +380,18 @@ function openGoal(n){
     ? `<div class="result">${a.answer===a.correct?`<b>Esatto, +${PTS_GLOBAL} punti.</b>`:`<b>Risposta sbagliata.</b> Quella giusta era: ${esc(G.o[a.correct])}.`} ${esc(a.feedback||"")}</div>`
     : `<div class="row-actions"><button class="btn" id="confirmAns" ${pendingChoice==null?"disabled":""}>Conferma risposta</button><span class="muted small">Avete un solo tentativo: consultatevi prima.</span></div>`;
 
-  // Campana
-  const C=G.campana, ca=S.campane[n], ce=S.campEvals[n];
-  const campBlock = ce
+  // Campana: a risposta multipla (se ha le opzioni) o aperta
+  const C=G.campana, ca=S.campane[n], ce=S.campEvals[n], cm=S.campMC[n];
+  let campBlock;
+  if(C.o){
+    const done=!!cm;
+    const copts=C.o.map((o,i)=>{ let cls="opt";
+      if(done){ if(i===cm.correct) cls+=" right"; else if(i===cm.choice) cls+=" wrong"; }
+      return `<button class="${cls}" data-copt="${i}" aria-pressed="${pendingCamp===i}" ${done?"disabled":""}>${esc(o)}</button>`; }).join("");
+    campBlock = `<div class="opts">${copts}</div>` + (done
+      ? `<div class="result">${cm.choice===cm.correct?`<b>Esatto, +${PTS_CAMPANA} punti.</b>`:`<b>Risposta sbagliata.</b> Quella giusta era: ${esc(C.o[cm.correct])}.`} ${esc(cm.feedback||"")}</div>`
+      : `<div class="row-actions"><button class="btn" id="confirmCamp" ${pendingCamp==null?"disabled":""}>Conferma risposta</button><span class="muted small">Un solo tentativo: cercate prima nella fonte.</span></div>`);
+  } else campBlock = ce
     ? `<p><span class="status ok">Valutata: ${ce.points}/${PTS_CAMPANA} punti</span></p>
        <div class="result"><b>La vostra risposta:</b><br><span class="pre">${esc(ca?.answer)}</span>${ce.comment?`<br><br><b>Commento della commissione:</b> ${esc(ce.comment)}`:""}</div>`
     : `<form id="campForm" class="stack" style="margin-top:10px">
@@ -410,19 +417,12 @@ function openGoal(n){
   let localForm;
   if(ev){
     localForm = `<p><span class="status ok">Valutata: ${ev.points}/${LOCAL_MAX} punti</span></p>
-      ${ev.comment?`<div class="result"><b>Commento della commissione:</b> ${esc(ev.comment)}</div>`:""}
-      <details style="margin-top:12px"><summary>Cosa avete consegnato</summary><p class="pre">${esc(sub?.text)}</p>${linksHtml(sub?.links)}</details>`;
+      ${ev.comment?`<div class="result"><b>Commento della commissione:</b> ${esc(ev.comment)}</div>`:""}`;
   } else {
-    const chosen = (sub?.text||"").match(/^\[Attività: ([A-D, ]+)\]/)?.[1]?.split(/,\s*/) || [];
-    const text = (sub?.text||"").replace(/^\[Attività: [A-D, ]+\]\n*/,"");
     localForm = `${consegnaHtml(G)}
-      ${sub?`<p><span class="status wait">Consegnata il ${new Date(sub.updated_at).toLocaleDateString("it-IT")}: in attesa di valutazione</span> <span class="muted small">Potete ancora aggiornarla.</span></p>`:""}
-      <form id="subForm" class="stack" style="margin-top:8px">
-        ${G.acts?`<fieldset class="pick"><legend>Le attività che avete svolto (sceglietene ${G.choose})</legend>${G.acts.map(A=>`<label class="check"><input type="checkbox" name="act" value="${A.id}" ${chosen.includes(A.id)?"checked":""}> <span><b>${A.id}</b> · ${esc(A.t)}</span></label>`).join("")}</fieldset>`:""}
-        <label class="f">Raccontate cosa avete fatto<span class="h">Dove siete stati, chi avete incontrato, cosa avete scoperto. Per ogni consegna, dite dove trovarla.</span><textarea id="sText" required maxlength="4000">${esc(text)}</textarea></label>
-        <label class="f">Link <span class="h">Uno per riga: mappa My Maps, cartella Drive, video YouTube "non in elenco". Il link deve essere aperto a chiunque lo abbia.</span><textarea id="sLinks" style="min-height:80px" placeholder="https://…">${esc((sub?.links||[]).join("\n"))}</textarea></label>
-        <button class="btn" type="submit">${sub?"Aggiorna la consegna":"Consegna la sfida"}</button>
-      </form>`;
+      ${sub?`<p><span class="status wait">Mail segnata come inviata il ${new Date(sub.updated_at).toLocaleDateString("it-IT")}: in attesa di valutazione</span></p>
+             <p class="muted small">Avete mandato altro materiale? Inviate un'altra mail con lo stesso oggetto.</p>`
+          :`<div class="row-actions"><button class="btn" id="markSent">Abbiamo inviato la mail</button></div>`}`;
   }
 
   dlg.innerHTML = `
@@ -455,9 +455,11 @@ function openGoal(n){
   dlg.querySelectorAll("[data-opt]").forEach(b=>b.addEventListener("click",()=>{ pendingChoice=+b.dataset.opt; openGoal(n); }));
   const ca2=$("#confirmAns"); if(ca2) ca2.onclick=()=>answerQuiz(n);
   const cf=$("#campForm"); if(cf){ cf.addEventListener("input",()=>S.dirty=true); cf.addEventListener("submit",e=>{ e.preventDefault(); submitCampana(n,e.submitter); }); }
-  const f=$("#subForm"); if(f){ f.addEventListener("input",()=>S.dirty=true); f.addEventListener("submit",e=>{ e.preventDefault(); submitLocal(n,e.submitter); }); }
+  dlg.querySelectorAll("[data-copt]").forEach(b=>b.addEventListener("click",()=>{ pendingCamp=+b.dataset.copt; openGoal(n); }));
+  const cc=$("#confirmCamp"); if(cc) cc.onclick=()=>answerCampana(n);
+  const ms=$("#markSent"); if(ms) ms.onclick=()=>markSent(n,ms);
 }
-$("#goalDlg").addEventListener("close",()=>{ S.openGoal=null; S.dirty=false; pendingChoice=null; render(); });
+$("#goalDlg").addEventListener("close",()=>{ S.openGoal=null; S.dirty=false; pendingChoice=null; pendingCamp=null; render(); });
 $("#goalDlg").addEventListener("click",e=>{ if(e.target.id==="goalDlg") e.target.close(); });
 
 async function answerQuiz(n){
@@ -486,25 +488,30 @@ async function submitCampana(n,btn){
   await refreshSblocco(); openGoal(n);
 }
 
-async function submitLocal(n,btn){
-  const G=goal(n);
-  let text=$("#sText").value.trim();
-  const links=$("#sLinks").value.split(/\s+/).map(s=>s.trim()).filter(Boolean);
-  if(links.some(u=>!safeUrl(u))) return toast("Controllate i link: devono iniziare con https://");
-  if(links.length>10) return toast("Massimo 10 link: raccogliete le prove in una cartella condivisa.");
-  if(!text) return toast("Scrivete almeno il racconto di cosa avete fatto.");
-  if(G.acts){
-    const acts=[...document.querySelectorAll('#subForm input[name=act]:checked')].map(i=>i.value);
-    if(!acts.length) return toast(`Indicate quali attività avete svolto (sceglietene ${G.choose}).`);
-    text=`[Attività: ${acts.join(", ")}]\n${text}`;
-  }
-  btn.disabled=true; btn.textContent="Invio in corso…";
+async function answerCampana(n){
+  if(pendingCamp==null || S.campMC[n]) return;
+  const btn=$("#confirmCamp"); btn.disabled=true;
+  const choice=pendingCamp;
+  const { data, error } = await sb.rpc("rispondi_campana",{ p_goal:n, p_answer:choice });
+  if(error && error.code!=="23505"){ btn.disabled=false; console.error(error); return toast("Risposta non salvata. Controllate la connessione e riprovate."); }
+  if(error){ await loadAll(); openGoal(n); return toast("Avevate già risposto a questa domanda."); }
+  const r=(data||[])[0]||{};
+  S.campMC[n]={goal:n,choice,correct:r.correct,feedback:r.feedback};
+  S.campane[n]={goal:n,choice}; S.campEvals[n]={goal:n,points:choice===r.correct?PTS_CAMPANA:0};
+  pendingCamp=null;
+  toast(choice===r.correct ? `Esatto! +${PTS_CAMPANA} punti` : "Risposta registrata");
+  await refreshSblocco(); openGoal(n); loadBoard(false);
+}
+
+async function markSent(n,btn){
+  if(!confirm("Confermate di aver inviato la mail con il materiale di questa sfida?")) return;
+  btn.disabled=true;
   const { data, error } = await sb.from("submissions")
-    .upsert({ clan_id:uid(), goal:n, text:text.slice(0,4000), links, updated_at:new Date().toISOString() }, { onConflict:"clan_id,goal" })
+    .upsert({ clan_id:uid(), goal:n, text:"Materiale inviato via email", links:[], updated_at:new Date().toISOString() }, { onConflict:"clan_id,goal" })
     .select().single();
-  if(error){ console.error(error); btn.disabled=false; btn.textContent="Consegna la sfida"; return toast("Invio non riuscito. Controllate la connessione e riprovate."); }
-  S.subs[n]=data; S.dirty=false;
-  toast("Sfida consegnata alla commissione");
+  if(error){ console.error(error); btn.disabled=false; return toast("Non salvato. Controllate la connessione e riprovate."); }
+  S.subs[n]=data;
+  toast("Segnato: la commissione valuterà il vostro materiale");
   await refreshSblocco(); openGoal(n);
 }
 
@@ -746,8 +753,8 @@ function renderRules(){
   $("#app").innerHTML = `<section class="hero"><p class="kicker">Strade 2030 · Thinking of Campania</p><h1>Come funziona</h1><p>Ogni obiettivo è una tappa con tre sfide. Potete affrontarle nell'ordine che volete e in quanto tempo volete. <button class="linkbtn" type="button" data-spirit>Lo spirito del gioco</button></p></section>
   <div class="rules" style="padding-bottom:24px">
     <div class="panel"><span class="big">${PTS_GLOBAL}</span><h3>Sfida globale</h3><p>Una domanda sul mondo. Un solo tentativo: risposta giusta, ${PTS_GLOBAL} punti; sbagliata, zero. Studiate e confrontatevi prima di confermare.</p></div>
-    <div class="panel"><span class="big">${PTS_CAMPANA}</span><h3>Sfida campana</h3><p>Una domanda sulla Campania, con la fonte dove cercare. Si risponde con parole vostre: la commissione assegna da 0 a ${PTS_CAMPANA} punti. Potete correggere la risposta finché non viene valutata.</p></div>
-    <div class="panel"><span class="big">${LOCAL_MAX}</span><h3>Sfida locale</h3><p>Una missione sul vostro territorio. Ogni consegna ha il suo punteggio massimo e i criteri che contano: la commissione vota consegna per consegna e il totale si calcola da solo.</p></div>
+    <div class="panel"><span class="big">${PTS_CAMPANA}</span><h3>Sfida campana</h3><p>Una domanda sulla Campania, con la fonte dove cercare la risposta. Un solo tentativo: risposta giusta, ${PTS_CAMPANA} punti.</p></div>
+    <div class="panel"><span class="big">${LOCAL_MAX}</span><h3>Sfida locale</h3><p>Una missione sul vostro territorio. Ogni consegna ha il suo punteggio massimo e i criteri che contano. Raccogliete il materiale e inviatelo per email a ${esc(CONSEGNA.email||"gli organizzatori")}, una mail per sfida; la commissione vota consegna per consegna.</p></div>
     <div class="panel"><span class="big">+${PTS_BONUS}</span><h3>Tappa completa</h3><p>Se su uno stesso obiettivo rispondete giusto alla domanda globale e ottenete punti nella sfida locale, ricevete un bonus di ${PTS_BONUS} punti.</p></div>
   </div>
   <section class="panel" style="margin-bottom:60px"><h3>Obiettivi di futuro</h3><p>Quando avete risposto a tutte le 17 domande globali e a tutte le 17 domande campane, e avete consegnato almeno ${SBLOCCO_LOCALI===1?"una sfida locale":SBLOCCO_LOCALI+" sfide locali"}, si sblocca la pagina <b>Obiettivi di futuro</b>: lì il clan sceglie i 3 obiettivi su cui vuole impegnarsi, e tutti possono vedere le scelte.</p></section>`;

@@ -39,7 +39,9 @@ const SDG_ICON = n => `assets/img/sdg/goal-${n}.png`;
 /* ---------------------------------------------------------------------
    I 17 OBIETTIVI
    q, o      = domanda globale e opzioni
-   campana   = domanda campana (q), nota facoltativa, fonti [nome, link]
+   campana   = domanda campana (q), opzioni o (se a risposta multipla: la
+               risposta giusta è nel database, tabella campana_key),
+               nota facoltativa, fonti [nome, link]
    lt, ld    = titolo e descrizione della sfida locale
    variants  = varianti tra cui scegliere (facoltativo)
    parts     = consegne: t testo, p punti massimi, k criteri di qualità
@@ -59,12 +61,17 @@ const GOALS = [
     "Asian Development Bank"
   ],
   "campana": {
-    "q": "Quali sono i 10 comuni campani con il reddito medio dichiarato più basso?",
-    "nota": "Per i comuni non esiste il PIL pro capite: si usa il reddito medio dichiarato ai fini IRPEF.",
+    "q": "Secondo gli ultimi dati ufficiali ISTAT sulla povertà relativa, quante famiglie campane vivono in condizione di povertà relativa?",
+    "o": [
+      "Circa l'8,5%",
+      "Circa il 20,8%",
+      "Circa il 35%",
+      "Circa il 48%"
+    ],
     "src": [
       [
-        "MEF – Dipartimento delle Finanze, Statistiche sulle dichiarazioni fiscali",
-        "https://www.finanze.gov.it"
+        "ISTAT – La povertà in Italia, anno 2024",
+        "https://www.istat.it/comunicato-stampa/la-poverta-in-italia-anno-2024/"
       ]
     ]
   },
@@ -113,8 +120,18 @@ const GOALS = [
     "UNICEF"
   ],
   "campana": {
-    "q": "Quanto cibo spreca in media una famiglia del Sud Italia a settimana, e quanto rispetto alla media nazionale?",
+    "q": "In Campania ogni anno oltre 1,5 milioni di tonnellate di cibo vengono sprecate o perse lungo la filiera. Qual è l'alimento fresco più sprecato nelle case delle famiglie?",
+    "o": [
+      "Pane e prodotti da forno",
+      "Frutta e verdura fresca",
+      "Carne e salumi",
+      "Latticini e formaggi"
+    ],
     "src": [
+      [
+        "CREA – Consiglio per la ricerca in agricoltura",
+        "https://www.crea.gov.it"
+      ],
       [
         "Osservatorio Waste Watcher International",
         "https://www.sprecozero.it"
@@ -166,19 +183,17 @@ const GOALS = [
     "Malaria"
   ],
   "campana": {
-    "q": "Quanti consultori familiari pubblici ci sono nella vostra ASL e quali servizi offrono per la salute mentale dei giovani?",
+    "q": "Quanti adulti in Campania sono obesi, secondo la sorveglianza PASSI dell'Istituto Superiore di Sanità?",
+    "o": [
+      "Circa 1 su 50 (2%)",
+      "Circa 1 su 8 (12-13%)",
+      "Circa 1 su 3 (33%)",
+      "Circa 1 su 2 (50%)"
+    ],
     "src": [
       [
-        "Regione Campania – Sanità",
-        "https://www.regione.campania.it"
-      ],
-      [
-        "Siti delle ASL",
-        ""
-      ],
-      [
-        "Ministero della Salute",
-        "https://www.salute.gov.it"
+        "ISS – EpiCentro, Sovrappeso e obesità in Italia",
+        "https://www.epicentro.iss.it/ben/2023/1/sovrappeso-obesita-italia"
       ]
     ]
   },
@@ -343,11 +358,17 @@ const GOALS = [
     "21"
   ],
   "campana": {
-    "q": "Quante biblioteche pubbliche ci sono nel vostro comune e quali sono aperte e accessibili come aula studio?",
+    "q": "In Italia la dispersione scolastica (giovani di 18-24 anni che hanno lasciato gli studi) è scesa sotto il 10%. E in Campania?",
+    "o": [
+      "Circa il 5%, sotto la media italiana",
+      "Circa il 13-16%, sopra la media italiana",
+      "Circa il 30%",
+      "Circa il 50%"
+    ],
     "src": [
       [
-        "Anagrafe delle biblioteche italiane – ICCU",
-        "https://anagrafe.iccu.sbn.it"
+        "ISTAT – Istruzione e abbandono scolastico",
+        "https://www.istat.it"
       ]
     ]
   },
@@ -396,11 +417,21 @@ const GOALS = [
     "1968"
   ],
   "campana": {
-    "q": "Quanti sono oggi i sindaci donna in Campania, su quanti comuni?",
+    "q": "In Campania ci sono 550 comuni. Quanti hanno una donna come sindaco?",
+    "o": [
+      "Circa 40 (meno di 1 comune su 10)",
+      "Circa 110 (1 su 5)",
+      "Circa 180 (1 su 3)",
+      "Circa 275 (1 su 2)"
+    ],
     "src": [
       [
         "Ministero dell'Interno – Anagrafe degli amministratori locali",
         "https://dait.interno.gov.it"
+      ],
+      [
+        "Tuttitalia – Campania",
+        "https://www.tuttitalia.it/campania/"
       ]
     ]
   },
@@ -449,12 +480,20 @@ const GOALS = [
     "2015"
   ],
   "campana": {
-    "q": "Indicate 3 fiumi campani con lo stato ecologico o chimico peggiore e spiegate la causa principale.",
-    "nota": "La risposta è valutata sulla motivazione, non su un'unica classifica giusta.",
+    "q": "Secondo il monitoraggio ARPAC, quali sono 3 dei corsi d'acqua più inquinati della Campania, con stato ecologico \"cattivo\"?",
+    "o": [
+      "Bussento, Mingardo e Calore Lucano",
+      "Sarno, Solofrana e Cavaiola",
+      "Po, Arno e Tevere"
+    ],
     "src": [
       [
         "ARPAC – Monitoraggio delle acque superficiali",
         "https://www.arpacampania.it"
+      ],
+      [
+        "SNPA – Il bacino del Sarno",
+        "https://snpambiente.it/wp-content/uploads/2024/10/marro-per-snpa.pdf"
       ]
     ]
   },
@@ -504,15 +543,21 @@ const GOALS = [
     "Pantelleria"
   ],
   "campana": {
-    "q": "Quale fonte di energia rinnovabile produce più elettricità in Campania?",
+    "q": "Quale fonte di energia pulita produce più elettricità in Campania?",
+    "o": [
+      "Solare fotovoltaico",
+      "Eolico",
+      "Idroelettrico",
+      "Geotermico"
+    ],
     "src": [
-      [
-        "GSE – Rapporto statistico sulle fonti rinnovabili",
-        "https://www.gse.it"
-      ],
       [
         "Terna – Statistiche regionali",
         "https://www.terna.it"
+      ],
+      [
+        "Legambiente – Dossier \"Qual buon vento\" 2025",
+        "https://www.legambiente.it"
       ]
     ]
   },
@@ -561,16 +606,17 @@ const GOALS = [
     "OCSE"
   ],
   "campana": {
-    "q": "Indicate 3 mestieri artigianali tipici della Campania e dove si praticano ancora.",
-    "nota": "Risposta aperta, valutata sulla motivazione.",
+    "q": "Quali sono 3 lavori artigianali tra i più caratteristici della Campania?",
+    "o": [
+      "Presepi di San Gregorio Armeno, ceramiche di Vietri sul Mare, corallo e cammei di Torre del Greco",
+      "Vetro di Murano, mosaici di Ravenna, merletti di Burano",
+      "Ceramiche di Caltagirone, pupi e carretti siciliani",
+      "Alabastro di Volterra, carta di Fabriano, violini di Cremona"
+    ],
     "src": [
       [
         "Regione Campania – Artigianato",
         "https://www.regione.campania.it"
-      ],
-      [
-        "Confartigianato Campania",
-        ""
       ]
     ]
   },
@@ -619,15 +665,21 @@ const GOALS = [
     "Pirelli"
   ],
   "campana": {
-    "q": "Che percentuale di famiglie campane è raggiunta dalla banda ultralarga? E nel vostro comune?",
+    "q": "Napoli ospita l'unica Apple Developer Academy d'Europa, nata nel 2016 con l'Università Federico II e al centro di un nuovo distretto digitale. In quale quartiere si trova?",
+    "o": [
+      "Vomero",
+      "San Giovanni a Teduccio",
+      "Posillipo",
+      "Chiaia"
+    ],
     "src": [
       [
-        "Piano Banda Ultralarga",
-        "https://bandaultralarga.italia.it"
+        "Il Post – A Napoli si sta sviluppando un \"distretto del digitale\" (2025)",
+        "https://www.ilpost.it/2025/07/12/napoli-industria-digitale/"
       ],
       [
-        "AGCOM",
-        "https://www.agcom.it"
+        "Università Federico II",
+        "https://www.unina.it"
       ]
     ]
   },
@@ -676,15 +728,21 @@ const GOALS = [
     "Indice di Sen"
   ],
   "campana": {
-    "q": "Qual è il tasso di NEET (giovani di 15-29 anni che non studiano e non lavorano) in Campania, rispetto alla media italiana?",
+    "q": "Quanti giovani campani tra 15 e 29 anni non studiano e non lavorano (NEET)?",
+    "o": [
+      "Circa il 10%",
+      "Circa il 16%, come la media italiana",
+      "Circa il 27%, tra i valori più alti d'Italia",
+      "Circa il 45%"
+    ],
     "src": [
       [
-        "ISTAT",
+        "ISTAT – Giovani che non lavorano e non studiano",
         "https://www.istat.it"
       ],
       [
-        "Eurostat",
-        "https://ec.europa.eu/eurostat"
+        "Report \"I dati regione per regione 2024\" (CRC)",
+        "https://gruppocrc.net/wp-content/uploads/2025/02/CS-Campania_finale.pdf"
       ]
     ]
   },
@@ -733,7 +791,13 @@ const GOALS = [
     "2011"
   ],
   "campana": {
-    "q": "Quanti metri quadrati di verde urbano per abitante ha il capoluogo della vostra provincia?",
+    "q": "Quanti metri quadrati di verde urbano per abitante ha Napoli, secondo i dati ISTAT?",
+    "o": [
+      "Circa 3 m²",
+      "Circa 13 m², meno della metà della media italiana",
+      "Circa 33 m², come la media italiana",
+      "Circa 100 m²"
+    ],
     "src": [
       [
         "ISTAT – Dati ambientali nelle città",
@@ -786,11 +850,21 @@ const GOALS = [
     "L'etichettatura degli OGM"
   ],
   "campana": {
-    "q": "Qual è la percentuale di raccolta differenziata del vostro comune, e com'è rispetto alla media regionale?",
+    "q": "Che percentuale di rifiuti urbani è stata raccolta in modo differenziato in Campania nel 2024?",
+    "o": [
+      "Circa il 30%",
+      "Circa il 58%, sotto la media italiana",
+      "Circa il 75%",
+      "Circa il 90%"
+    ],
     "src": [
       [
         "ISPRA – Catasto rifiuti",
         "https://www.catasto-rifiuti.isprambiente.it"
+      ],
+      [
+        "Osservatorio regionale sulla gestione dei rifiuti – Regione Campania",
+        "https://www.regione.campania.it"
       ]
     ]
   },
@@ -839,11 +913,21 @@ const GOALS = [
     "Convenzione di Rio"
   ],
   "campana": {
-    "q": "Quanti eventi climatici estremi ha registrato la Campania nell'ultimo anno, e dove?",
+    "q": "Nel novembre 2022 piogge eccezionali, uno degli eventi estremi legati alla crisi climatica, provocarono in Campania una frana con 12 vittime. Dove?",
+    "o": [
+      "Casamicciola Terme, sull'isola d'Ischia",
+      "Pozzuoli, nei Campi Flegrei",
+      "Positano, in Costiera Amalfitana",
+      "Caserta"
+    ],
     "src": [
       [
         "Legambiente – Osservatorio CittàClima",
         "https://cittaclima.it"
+      ],
+      [
+        "Dipartimento della Protezione Civile",
+        "https://www.protezionecivile.gov.it"
       ]
     ]
   },
@@ -892,15 +976,21 @@ const GOALS = [
     "San Giovanni a Teduccio"
   ],
   "campana": {
-    "q": "Che percentuale delle acque costiere campane è classificata come \"eccellente\", e quali tratti sono vietati alla balneazione?",
+    "q": "Nella classificazione 2025, quanta parte della costa balneabile della Campania ha acque \"eccellenti\"?",
+    "o": [
+      "Circa il 30%",
+      "Circa il 60%",
+      "Quasi il 90%",
+      "Il 100%"
+    ],
     "src": [
       [
         "Portale Acque – Ministero della Salute",
         "https://www.portaleacque.salute.gov.it"
       ],
       [
-        "ARPAC",
-        "https://www.arpacampania.it"
+        "SNPA – Dati balneazione 2025",
+        "https://www.snpambiente.it/wp-content/uploads/2025/06/Dati-balneazione-2025.pdf"
       ]
     ]
   },
@@ -959,11 +1049,17 @@ const GOALS = [
     "Orchidea selvatica"
   ],
   "campana": {
-    "q": "Quanto suolo è consumato in Campania (in percentuale), e come si colloca la vostra provincia?",
+    "q": "Quanta parte del territorio della Campania è coperta da cemento, asfalto e altre superfici artificiali (suolo consumato, dati 2024)?",
+    "o": [
+      "Circa il 2%",
+      "Circa il 7%, come la media italiana",
+      "Circa il 10,6%, terza regione d'Italia",
+      "Circa il 30%"
+    ],
     "src": [
       [
-        "ISPRA – Rapporto sul consumo di suolo",
-        "https://www.isprambiente.gov.it"
+        "ISPRA – Rapporto sul consumo di suolo 2025",
+        "https://www.snpambiente.it/wp-content/uploads/2025/10/sintesi-consumo-di-suolo-2025.pdf"
       ]
     ]
   },
@@ -1022,15 +1118,21 @@ const GOALS = [
     "Torre Annunziata"
   ],
   "campana": {
-    "q": "Quanti beni confiscati alla criminalità organizzata ci sono in Campania, e quanti sono riutilizzati a fini sociali?",
+    "q": "Per numero di immobili confiscati alla criminalità organizzata (dati ANBSC 2023), dove si colloca la Campania tra le regioni italiane?",
+    "o": [
+      "Al primo posto, davanti alla Sicilia",
+      "Al terzo posto, dopo Sicilia e Calabria, con oltre 3.000 immobili",
+      "A metà classifica",
+      "Tra le ultime regioni"
+    ],
     "src": [
       [
         "ANBSC – OpenRE.G.I.O.",
         "https://openregio.anbsc.it"
       ],
       [
-        "Libera",
-        "https://www.libera.it"
+        "Il Post – I beni immobiliari confiscati alla mafia",
+        "https://www.ilpost.it/2023/03/08/beni-immobiliari-confiscati-alla-mafia/"
       ]
     ]
   },
@@ -1079,11 +1181,21 @@ const GOALS = [
     "232"
   ],
   "campana": {
-    "q": "Quanti enti del Terzo Settore iscritti al RUNTS hanno sede nella vostra provincia?",
+    "q": "Nel 2023, quanti enti del Terzo Settore iscritti al RUNTS c'erano in Campania ogni 1.000 abitanti?",
+    "o": [
+      "Circa 1,6, tra i valori più bassi d'Italia",
+      "Circa 5",
+      "Circa 15",
+      "Circa 50"
+    ],
     "src": [
       [
         "RUNTS – Ministero del Lavoro",
         "https://servizi.lavoro.gov.it/runts"
+      ],
+      [
+        "Welforum – Il RUNTS a un anno dall'avvio",
+        "https://welforum.it/pdf-articolo.php?id=49820"
       ]
     ]
   },
