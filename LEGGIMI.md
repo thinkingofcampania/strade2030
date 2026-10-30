@@ -164,3 +164,11 @@ Metti le 17 icone in `assets/img/sdg/` con i nomi `goal-1.png` ... `goal-17.png`
 
 - **Domande campane 1-17** tutte a risposta multipla: un tentativo, 10 punti automatici, fonte visibile sotto la domanda. Le risposte giuste e le spiegazioni sono solo nel database (tabella `campana_key`); la commissione può cambiarle dalla scheda **Campane** e i punti si ricalcolano. Per cambiare una domanda: testo e opzioni in `goals.js`, risposta giusta e spiegazione dalla scheda Campane della commissione.
 - **Sfide locali**: niente più racconto e link nel sito. I clan mandano tutto a strade2030@gmail.com, una mail per sfida con l'oggetto indicato, e premono "Abbiamo inviato la mail". In commissione ogni consegna ha il pulsante **Cerca in Gmail**; se un clan dimentica il tasto, puoi registrare tu la consegna.
+
+## Aggiornamento 5 · Carattere, icone, commissione solo sfide locali
+
+- Carattere unico **Titillium Web** su tutto il sito.
+- Icone ufficiali degli obiettivi sulla **mappa** (cartella `assets/img/sdg/`). Per tornare alle caselle colorate: `SDG_ICONE = false` in `assets/goals.js`.
+- La commissione valuta **solo le sfide locali**: la scheda Campane non c'è più, perché globali e campane si correggono da sole.
+- Se un giorno una risposta giusta di una domanda campana fosse sbagliata: Supabase → Table Editor → `campana_key`, cambia `correct` (0 = prima opzione, 1 = seconda, …) per quell'obiettivo, poi in SQL Editor esegui `select ricalcola_campana(N);` con il numero dell'obiettivo. I punti dei clan si aggiornano.
+
