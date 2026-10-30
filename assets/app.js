@@ -327,8 +327,8 @@ function renderMap(){
   </section>
   ${progressCard()}
   <section class="trail" aria-label="Obiettivi dell'Agenda 2030">
-    ${GOALS.map(G=>`<button class="tile ${G.dark?"dark-text":""}" style="--c:${G.c}" data-goal="${G.n}" aria-label="Obiettivo ${G.n}: ${esc(G.t)}">
-      <span class="num">${G.n}</span><span class="ttl">${esc(G.t)}</span><span class="marks">${tileMarks(G.n)}</span></button>`).join("")}
+    ${GOALS.map(G=>`<button class="tile ${G.dark?"dark-text":""} ${SDG_ICONE?"has-ico":""}" style="--c:${G.c}" data-goal="${G.n}" aria-label="Obiettivo ${G.n}: ${esc(G.t)}">
+      ${SDG_ICONE?`<img class="ico" src="${esc(SDG_ICON(G.n))}" alt="" onerror="this.closest('.tile').classList.remove('has-ico');this.remove()">`:""}<span class="num">${G.n}</span><span class="ttl">${esc(G.t)}</span><span class="marks">${tileMarks(G.n)}</span></button>`).join("")}
   </section>`;
   document.querySelectorAll("[data-goal]").forEach(b=>b.addEventListener("click",()=>openGoal(+b.dataset.goal)));
   $("#editProfile").onclick=openProfile;

@@ -411,3 +411,10 @@ label.f{font-weight:600}
 .kicker{font-weight:700;letter-spacing:.06em}
 .hero h1,.reg h1,.section-title,.m-head h2,.m-head .num,.tile .num,.sdg b,.brand b,.score-pill strong{font-weight:700}
 .brand b{text-transform:none;letter-spacing:0}
+
+/* Caselle della mappa con l'icona ufficiale (l'icona resta intera, gli stati sotto) */
+.tile.has-ico{padding:0;min-height:0;overflow:hidden;gap:0}
+.tile.has-ico .ico{display:block;width:100%;aspect-ratio:1;object-fit:cover}
+.tile.has-ico .num,.tile.has-ico .ttl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.tile.has-ico .marks{margin:0;padding:9px 10px 10px;min-height:44px;align-content:flex-start}
+@media (max-width:600px){.tile.has-ico{min-height:0;padding:0}.tile.has-ico .marks{padding:8px}}
