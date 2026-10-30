@@ -7,8 +7,8 @@
 :root{
   --paper:#F6F4F0; --paper-2:#ECE8E1; --ink:#1A1A1A; --ink-soft:#5C5752; --line:#DCD6CC;
   --card:#FFFFFF; --kerchief:#B8232B; --on-red:#FFFFFF; --ok:#2F7D4A; --warn:#A8631A;
-  --display:"Anton","Arial Narrow",Impact,sans-serif;
-  --text:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --display:"Titillium Web",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --text:"Titillium Web",system-ui,-apple-system,"Segoe UI",sans-serif;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
@@ -382,3 +382,32 @@ a.btn{display:inline-block;text-decoration:none}
 .add-sub{padding:12px 16px;margin:0 0 6px}
 .add-sub summary{cursor:pointer}
 label.opt{display:flex;gap:10px;align-items:center;cursor:pointer}
+
+
+/* =====================================================================
+   Tipografia: una sola famiglia (Titillium Web), due pesi principali,
+   titoli in tono normale (non tutto maiuscolo), testo grande e arioso.
+   ===================================================================== */
+body{font-size:17px;line-height:1.55}
+h1,h2,h3,h4,.brand b,.claim,.choose,.zone-title,.howto h4,.unlock h2,.m-sec h3,.spirit h2,.gcard h3,.choice h3,.chooser h2,.panel>h2,.waiting h2,.rules h3,.act h4,.m-head h2{
+  font-family:var(--display);font-weight:700;text-transform:none;letter-spacing:-.005em}
+h1,h2,h3{line-height:1.15}
+.hero h1{font-size:clamp(32px,5vw,50px);max-width:20ch}
+.reg h1{font-size:clamp(40px,6.5vw,62px);line-height:1.05}
+.claim{font-size:clamp(20px,2.6vw,26px);font-weight:600}
+.brand b{font-size:22px}
+.m-head h2{font-size:24px}
+.m-sec h3{font-size:21px}
+.spirit h2{font-size:clamp(28px,5vw,38px)}
+.unlock h2,.waiting h2{font-size:22px}
+.zone-title{font-size:26px}
+.choose{font-size:17px;font-weight:700}
+.howto h4{font-size:18px}
+.tile .num,.m-head .num,.big,.lb .pos,.tot,.score-pill strong{font-family:var(--display);font-weight:700}
+.tile .ttl{font-weight:600}
+.btn,nav.tabs button,.seg button,.filters button{font-weight:600}
+label.f{font-weight:600}
+.q{font-weight:600}
+.kicker{font-weight:700;letter-spacing:.06em}
+.hero h1,.reg h1,.section-title,.m-head h2,.m-head .num,.tile .num,.sdg b,.brand b,.score-pill strong{font-weight:700}
+.brand b{text-transform:none;letter-spacing:0}
