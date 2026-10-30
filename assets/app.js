@@ -620,15 +620,18 @@ function renderBoard(){
   const all=S.board, rows=S.boardZona ? all.filter(r=>r.zona===S.boardZona) : all;
   const max=Math.max(1,...rows.map(r=>r.totale));
   let pos=0, prev=null;
-  $("#app").innerHTML = `<section class="hero"><p class="kicker">Strade 2030 · Il domani è oggi</p><h1>Classifica dei clan</h1><p>${all.length} clan in cammino. I punti delle sfide campane e locali compaiono appena la commissione le valuta.</p></section>
+  $("#app").innerHTML = `<section class="hero"><p class="kicker">Strade 2030 · Il domani è oggi</p><h1>Classifica dei clan</h1><p>${all.length} clan in cammino. Domande globali e campane contano subito; i punti delle sfide locali compaiono appena la commissione le valuta.</p></section>
    <div class="filters"><select id="zf" aria-label="Filtra per zona" class="pill-select"><option value="">Tutte le zone</option>${ZONE.map(z=>`<option ${z===S.boardZona?"selected":""}>${esc(z)}</option>`).join("")}</select></div>
-   <div class="panel" style="margin-bottom:60px">
+   <div class="panel board-panel" style="margin-bottom:60px">
     ${rows.length?`<ol class="lb">${rows.map((r,i)=>{ if(r.totale!==prev){pos=i+1;prev=r.totale;}
       const me=r.clan_id===uid();
-      return `<li class="${me?"me":""}"><span class="pos">${pos}</span>
-        <div class="who"><b>${esc(r.name)}${me?" (voi)":""}</b><small>Zona ${esc(r.zona)}${r.grp?" · "+esc(r.grp):""}</small>
-          <div class="bar" title="Globale ${r.globale}, campana ${r.campana}, locale ${r.locale}, bonus ${r.bonus}"><i style="width:${r.globale/max*100}%;background:var(--ink-soft)"></i><i style="width:${r.campana/max*100}%;background:var(--warn)"></i><i style="width:${r.locale/max*100}%;background:var(--ok)"></i><i style="width:${r.bonus/max*100}%;background:var(--kerchief)"></i></div></div>
-        <span class="tot">${r.totale}<small>glob. ${r.globale} · camp. ${r.campana} · loc. ${r.locale} · bonus ${r.bonus}</small></span></li>`; }).join("")}</ol>`
+      return `<li class="${me?"me":""} ${pos<=3?"top":""}"><span class="pos">${pos}</span>
+        <div class="who"><b>${esc(r.name)}${me?" <em>voi</em>":""}</b><small>Zona ${esc(r.zona)}${r.grp?" · "+esc(r.grp):""}</small></div>
+        <span class="tot">${r.totale}<small>punti</small></span>
+        <div class="split">
+          <div class="bar" aria-hidden="true"><i style="width:${r.globale/max*100}%;background:var(--ink-soft)"></i><i style="width:${r.campana/max*100}%;background:var(--warn)"></i><i style="width:${r.locale/max*100}%;background:var(--ok)"></i><i style="width:${r.bonus/max*100}%;background:var(--kerchief)"></i></div>
+          <ul class="legend"><li><i style="background:var(--ink-soft)"></i>Globali <b>${r.globale}</b></li><li><i style="background:var(--warn)"></i>Campane <b>${r.campana}</b></li><li><i style="background:var(--ok)"></i>Locali <b>${r.locale}</b></li>${r.bonus?`<li><i style="background:var(--kerchief)"></i>Bonus <b>${r.bonus}</b></li>`:""}</ul>
+        </div></li>`; }).join("")}</ol>`
     :`<p class="muted">${S.boardZona?"Nessun clan di questa zona in classifica.":"Nessun clan ancora in gara. Il primo a registrarsi apre la strada."}</p>`}
    </div>`;
   $("#zf").onchange=e=>{ S.boardZona=e.target.value; renderBoard(); };
