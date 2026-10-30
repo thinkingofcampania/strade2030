@@ -67,14 +67,18 @@ const GOALS = [
       "Asian Development Bank"
     ],
     "campana": {
-      "q": "Caccia al dato: l'Assegno di inclusione è l'aiuto dello Stato per le famiglie in povertà. Quante famiglie lo ricevono nella vostra provincia? Mettete in classifica le 5 province campane e scoprite in che posizione si trovano la Campania tra le regioni e Napoli tra le province d'Italia.",
+      "q": "Elencate gli ultimi 10 comuni campani per reddito pro capite: quali sono i 10 comuni della Campania dove si dichiara il reddito medio più basso? Indicate per ognuno provincia e reddito medio, poi scoprite in che posizione è il vostro comune.",
       "src": [
         [
-          "INPS – Osservatorio sull'Assegno di inclusione (report più recente)",
-          "https://www.inps.it/content/dam/inps-site/pdf/dati-analisi-bilanci/osservatori-statistici/osservatorio-adi-sfl/Report_ADI_SLF_Luglio_2025.pdf"
+          "MEF – Dipartimento delle Finanze, statistiche sulle dichiarazioni dei redditi (open data per comune)",
+          "https://www1.finanze.gov.it/finanze/analisi_stat/public/index.php?opendata=yes"
+        ],
+        [
+          "QuiFinanza – I comuni più ricchi (e più poveri) della Campania",
+          "https://quifinanza.it/economia/comuni-piu-ricchi-campania/904186/"
         ]
       ],
-      "nota": "Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."
+      "nota": "Il PIL non si calcola per ogni comune: per confrontare i comuni si usa il reddito medio dichiarato (reddito imponibile diviso per il numero di contribuenti). Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."
     },
     "ld": "La povertà ha tante facce: cibo, casa, bollette, scuola. Scoprite chi è in difficoltà vicino a voi e chi lo aiuta.",
     "parts": [
@@ -582,11 +586,11 @@ const GOALS = [
       "Indice di Sen"
     ],
     "campana": {
-      "q": "In Campania c'è chi dichiara quasi il triplo di un altro. Con i dati del Ministero dell'Economia sui redditi dei comuni, trovate i 3 comuni campani con il reddito medio più alto e i 3 con il più basso. In che posizione è il vostro comune?",
+      "q": "Quanto è più povera una famiglia campana di una italiana? Nel BES dei territori trovate il reddito disponibile delle famiglie (valore mediano per persona) in Campania, in Italia e nelle 5 province, e la quota di pensionati con una pensione bassa. Quale provincia sta peggio?",
       "src": [
         [
-          "MEF – Dipartimento delle Finanze, statistiche sulle dichiarazioni dei redditi (open data per comune)",
-          "https://www1.finanze.gov.it/finanze/analisi_stat/public/index.php?opendata=yes"
+          "ISTAT – Il benessere equo e sostenibile dei territori: Campania (BES 2025)",
+          "https://www.istat.it/wp-content/uploads/2025/12/BesT2025_Campania.pdf"
         ]
       ],
       "nota": "Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."

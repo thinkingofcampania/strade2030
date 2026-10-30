@@ -686,3 +686,12 @@ insert into public.campana_key (goal, reference, correct, feedback, updated_at) 
 insert into public.campana_key (goal, reference, correct, feedback, updated_at) values (17, $r$La risposta dipende dal comune: si verifica sulla pagina del comune in OpenCoesione (sezione Territori). Punteggio pieno: numero di progetti e valore totale, progetto più grande con importo, un progetto scelto con stato di avanzamento, data della consultazione e link.$r$, null, null, now())
   on conflict (goal) do update set reference = excluded.reference, correct = null, feedback = null, updated_at = now();
 
+
+
+-- =====================================================================
+--  STRADE 2030 · Aggiornamento 5
+--  Nuove risposte di riferimento per le domande campane 1 e 10.
+--  Incolla in Supabase > SQL Editor > Run. Si può rieseguire senza danni.
+-- =====================================================================
+update public.campana_key set reference = $r$Il PIL pro capite esiste solo per regioni e province: per i comuni si usa il reddito medio dichiarato (open data MEF). Gli ultimi posti in Campania sono occupati quasi tutti da piccoli comuni del Sannio (Fortore) e del Cilento. Dichiarazioni 2024 (redditi 2023): Castelvetere in Val Fortore 11.087 €, Castelfranco in Miscano 11.385 €, Rofrano 11.949 €. Tra gli ultimi compaiono anche, secondo la stampa locale, Castelpagano, Baselice, San Giorgio la Molara, Ginestra degli Schiavoni, Montefalcone di Val Fortore, San Bartolomeo in Galdo. Il MEF pubblica ogni anno nuovi dati e la classifica cambia: verificate la lista dei clan sul file open data dell'anno che citano (ordinate i comuni della Campania per reddito medio). Punteggio pieno: 10 comuni corretti per l'anno citato, con provincia e reddito, posizione del proprio comune.$r$, correct = null, feedback = null, updated_at = now() where goal = 1;
+update public.campana_key set reference = $r$BES dei territori 2025. Reddito disponibile equivalente mediano (2022): Italia 18.600 €; Campania 13.800 € (circa 4.800 € in meno, -26%). Province: Avellino 15.000 €; Benevento 14.700 €; Salerno 14.500 €; Caserta 13.600 €; Napoli 13.400 € (la più bassa). Pensionati con pensione bassa (2023): Italia 8,9%; Campania 14,2%; Napoli 15,6% (la peggiore); Caserta 13,4%; Avellino 13,6%; Benevento 12,7%; Salerno 11,7%. Punteggio pieno: valori corretti con l'anno, differenza con l'Italia, provincia peggiore.$r$, correct = null, feedback = null, updated_at = now() where goal = 10;
