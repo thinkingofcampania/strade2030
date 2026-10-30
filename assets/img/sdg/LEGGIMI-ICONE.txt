@@ -1,0 +1,6 @@
+ICONE UFFICIALI DEGLI OBIETTIVI
+
+Metti qui le 17 icone, con questi nomi esatti (tutto minuscolo):
+  goal-1.png, goal-2.png, ... goal-17.png
+
+Se un'icona manca, il sito mostra al suo posto un riquadro colorato con numero e nome.

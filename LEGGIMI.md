@@ -112,3 +112,53 @@ Poi carica su GitHub i file nuovi. Da quel momento:
 - nell'area commissione, scheda *Clan*, il pulsante **Nascondi** toglie un clan dalla galleria (e **Mostra** lo rimette).
 
 Per pubblicare foto e nomi il clan deve spuntare la conferma del consenso (dei membri e, per i minorenni, dei genitori).
+
+## Aggiornamento 2 · Zone, sfide campane, punteggi, obiettivi di futuro, recupero accesso
+
+### 1. Database (prima di tutto)
+
+Supabase > **SQL Editor** > *New query*: incolla tutto `supabase/aggiornamento-2.sql` e premi **Run**.
+**Attenzione: cancella tutti i clan** (erano di prova), con risposte, prove e valutazioni. Gli account della commissione restano.
+
+Facoltativo: in **Storage** svuota le cartelle `prove` e `clan` dalle foto di prova.
+
+### 2. Sito
+
+Carica su GitHub tutto il contenuto della cartella (il `config.js` è già il tuo). I file nuovi sono `assets/app.js` e `assets/commissione.js`.
+
+### 3. Modulo Google per i materiali (consigliato)
+
+1. Con l'account Google del progetto crea un modulo su forms.google.com, titolo "Strade 2030 · Consegna materiali".
+2. Aggiungi 5 domande **Risposta breve**: Zona, Clan, Codice clan, Obiettivo, Sfida.
+3. Aggiungi una domanda **Caricamento file** (massimo 10 file, 100 MB ciascuno) e una **Paragrafo** "Cosa contiene ogni file".
+4. Menu ⋮ > **Ottieni link precompilato**: nelle 5 risposte brevi scrivi esattamente `ZONA`, `CLAN`, `CODICE`, `OBIETTIVO`, `SFIDA`, poi **Ottieni link** > **Copia link**.
+5. Incolla il link in `assets/goals.js`, alla riga `modulo: "",` tra le virgolette.
+
+I file finiscono nel Drive del progetto e le risposte in un foglio Google, ordinabile per zona, clan e obiettivo. Per caricare file i ragazzi devono accedere con un account Google.
+Se preferite l'email: in `goals.js` metti `modo: "email"` e l'indirizzo in `email: ""`.
+
+### 4. Icone degli obiettivi
+
+Metti le 17 icone in `assets/img/sdg/` con i nomi `goal-1.png` ... `goal-17.png`.
+
+### Cosa cambia per i clan
+
+- Iscrizione con **zona** (menu a tendina) ed **email di riferimento**; la città non c'è più.
+- Pop-up "Lo spirito del gioco" al primo accesso, richiamabile dalla mappa e dalle regole.
+- Ogni obiettivo ha 3 sfide: **globale** (10 punti, la soluzione arriva dal database), **campana** (risposta aperta con fonte, 0-10 punti dalla commissione), **locale** (fino a 200 punti, divisi tra le consegne con i loro criteri).
+- **Obiettivi di futuro**: si sbloccano quando il clan ha risposto a tutte le 17 domande globali e campane e ha consegnato almeno una sfida locale. Le scelte e il grafico sono pubblici.
+- "Codice o password dimenticati?" manda una richiesta alla commissione; dal profilo il clan può cambiare password.
+
+### Cosa cambia per la commissione
+
+- **Locali**: un voto per consegna, il totale si calcola da solo (obiettivo 3: contano le 2 attività migliori).
+- **Campane**: risposte per obiettivo, voto 0-10 e **risposta di riferimento** riservata.
+- **Richieste**: chi ha dimenticato codice o password; genera una password temporanea e scrivi al clan.
+- **Clan**: zona, email, codice, nuova password, galleria, CSV.
+
+### Dove si cambiano le regole
+
+- Punti di ogni consegna, testi, domande campane e fonti: `assets/goals.js`.
+- Punti di domanda globale, campana e bonus: `goals.js` **e** la funzione `classifica` nel database.
+- Zone: `goals.js` **e** il vincolo `clans_zona_check` nel database.
+- Numero di sfide locali per lo sblocco: `SBLOCCO_LOCALI` in `goals.js` **e** la funzione `stato_sblocco` nel database.
