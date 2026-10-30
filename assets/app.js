@@ -655,7 +655,7 @@ function renderGallery(){
 /* ---------- Obiettivi di futuro ---------- */
 let futurePick=null;
 function renderFuture(){
-  const head = `<section class="hero"><p class="kicker">Thinking of Campania · Il domani è oggi</p><h1>I nostri obiettivi di futuro</h1>
+  const head = `<section class="hero"><p class="kicker">Thinking of Campania · Il domani è oggi</p><h1>I vostri obiettivi di futuro</h1>
     <p>Dopo aver percorso le strade dell'Agenda 2030, ogni clan sceglie <b>3 obiettivi</b> su cui vorrebbe impegnarsi in futuro. La scelta nasce da ciò che avete scoperto con le sfide: non dovete lavorare su tutti e 3, ma indicare dove volete mettere le vostre energie.</p></section>`;
   if(S.scelte===null){ $("#app").innerHTML = head+`<p>Caricamento…</p>`; loadScelte(); return; }
   const clanRows=S.scelte.filter(r=>r.livello==="clan");
