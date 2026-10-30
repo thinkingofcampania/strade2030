@@ -8,16 +8,16 @@
    ===================================================================== */
 
 /* Come i clan consegnano i materiali delle sfide locali (foto, documenti, video).
-   modo: "modulo" = Google Modulo con caricamento file (consigliato)
-         "email"  = una mail per sfida all'indirizzo indicato
+   modo: "email"  = una mail per sfida all'indirizzo indicato qui sotto
+         "modulo" = Google Modulo con caricamento file
          ""       = nessuna istruzione (solo racconto e link nel sito)
    modulo: link "precompilato" del Google Modulo in cui hai scritto, nei campi,
            esattamente ZONA, CLAN, CODICE, OBIETTIVO, SFIDA (vedi LEGGIMI).
    email: indirizzo a cui inviare i materiali. */
 const CONSEGNA = {
-  modo: "modulo",
+  modo: "email",
   modulo: "",
-  email: "",
+  email: "strade2030@gmail.com",
   limiteMB: 20
 };
 
@@ -32,7 +32,8 @@ const PTS_GLOBAL = 10, PTS_CAMPANA = 10, PTS_BONUS = 5, LOCAL_MAX = 200;
 const SBLOCCO_LOCALI = 1;
 
 /* Icone ufficiali degli obiettivi: assets/img/sdg/goal-1.png ... goal-17.png
-   (se mancano, si usano i riquadri colorati). */
+   Finché SDG_ICONE è false si usano i riquadri colorati con numero e nome. */
+const SDG_ICONE = false;   // metti true quando avrai caricato le 17 icone
 const SDG_ICON = n => `assets/img/sdg/goal-${n}.png`;
 
 /* ---------------------------------------------------------------------

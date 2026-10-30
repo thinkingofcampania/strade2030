@@ -113,7 +113,7 @@ document.addEventListener("click", e=>{ if(e.target.closest("[data-spirit]")) op
 /* ---------- Icone SDG (con ripiego sul riquadro colorato) ---------- */
 function sdg(n, cls=""){
   const G=goal(n);
-  return `<span class="sdg ${cls}" style="--c:${G.c}" title="${n}. ${esc(G.t)}"><img src="${esc(SDG_ICON(n))}" alt="Obiettivo ${n}: ${esc(G.t)}" loading="lazy" onerror="this.parentNode.classList.add('noimg');this.remove()"><b>${n}</b><i>${esc(G.t)}</i></span>`;
+  return `<span class="sdg ${cls}" style="--c:${G.c}" title="${n}. ${esc(G.t)}">${SDG_ICONE?`<img src="${esc(SDG_ICON(n))}" alt="Obiettivo ${n}: ${esc(G.t)}" loading="lazy" onerror="this.remove()">`:""}<b>${n}</b><i>${esc(G.t)}</i></span>`;
 }
 
 /* ---------- Render ---------- */
@@ -678,6 +678,7 @@ function renderFuture(){
   const maxC=Math.max(1,...counts.map(c=>c.n));
   const nClan=new Set(clanRows.map(r=>r.soggetto)).size;
   const chart = `<section class="panel">
+    <p class="kicker" style="margin:0 0 4px">Thinking of Città</p>
     <h2>Quante volte è stato scelto ogni obiettivo</h2>
     <p class="muted">${nClan} clan hanno scelto i loro 3 obiettivi.</p>
     <ol class="hbars">${counts.map(({G,n})=>`<li>${sdg(G.n,"mini")}<span class="hb-label">${G.n}. ${esc(G.t)}</span><span class="hb-track"><i style="width:${n/maxC*100}%;background:${G.c}"></i></span><b>${n}</b></li>`).join("")}</ol>
@@ -695,7 +696,7 @@ function renderFuture(){
     </article>`).join("")}</div></section>`).join("")
     : `<p class="muted">Ancora nessun clan ha scelto i suoi obiettivi.</p>`;
 
-  $("#app").innerHTML = head + `<div class="stack" style="padding-bottom:60px">${mineHtml}${chart}${listHtml}</div>`;
+  $("#app").innerHTML = head + `<div class="stack" style="padding-bottom:60px">${levelsHtml()}${mineHtml}${chart}${listHtml}${nextLevels()}</div>`;
 
   document.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{
     document.querySelectorAll("[data-why]").forEach(t=>futurePick[t.dataset.why]=t.value);
@@ -714,6 +715,30 @@ function renderFuture(){
     if(error){ sv.disabled=false; console.error(error); return toast(/sbloccata/.test(error.message)?"La sezione non è ancora sbloccata.":"Scelte non salvate. Riprovate."); }
     toast("Obiettivi di futuro salvati"); futurePick=null; await loadScelte();
   };
+}
+
+/* Livelli: clan (ora), zona e Agorà regionale (dopo la sfida) */
+const LEVELS=[
+  {k:"clan", n:"1", t:"Thinking of Città", s:"I clan", d:"Ogni clan sceglie i 3 obiettivi di futuro per il suo territorio."},
+  {k:"zona", n:"2", t:"Thinking of Zona", s:"Le zone", d:"Ogni zona, partendo dalle scelte dei suoi clan, sceglierà i suoi 3 obiettivi."},
+  {k:"regionale", n:"3", t:"Thinking of Campania", s:"L'Agorà regionale", d:"L'ultima tappa: all'Agorà la Campania sceglierà insieme i suoi 3 obiettivi."}];
+const levelOpen = k => k==="clan" || (S.scelte||[]).some(r=>r.livello===k);
+function levelsHtml(){
+  return `<ol class="levels">${LEVELS.map(L=>`<li class="${levelOpen(L.k)?"on":""}"><span class="lv-n">${L.n}</span><div><b>${L.t}</b><small>${L.s} · ${levelOpen(L.k)?(L.k==="clan"?"in corso":"aperto"):"in attesa"}</small></div></li>`).join("")}</ol>`;
+}
+function nextLevels(){
+  return LEVELS.slice(1).map(L=>{
+    const rows=(S.scelte||[]).filter(r=>r.livello===L.k);
+    if(!rows.length) return `<section class="waiting"><span class="lv-n">${L.n}</span><div>
+        <p class="kicker">Waiting for… ${L.s}</p>
+        <h2>${L.t}</h2>
+        <p>${esc(L.d)} Questa tappa si apre alla fine della sfida: intanto continuate a camminare, le vostre scelte di oggi saranno il punto di partenza.</p>
+      </div></section>`;
+    const by={}; rows.forEach(r=>{ (by[r.soggetto] ||= []).push(r); });
+    return `<section class="panel"><h2>${L.t}</h2><p class="muted">${esc(L.s)}</p>
+      <div class="choices">${Object.entries(by).map(([sog,gs])=>`<article class="choice"><h3>Thinking of ${esc(sog)}</h3>
+        <div class="choice-icons">${gs.sort((a,b)=>a.goal-b.goal).map(r=>`<div>${sdg(r.goal)}${r.perche?`<p>${esc(r.perche)}</p>`:""}</div>`).join("")}</div></article>`).join("")}</div></section>`;
+  }).join("");
 }
 
 /* ---------- Regole ---------- */

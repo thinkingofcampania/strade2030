@@ -126,20 +126,14 @@ Facoltativo: in **Storage** svuota le cartelle `prove` e `clan` dalle foto di pr
 
 Carica su GitHub tutto il contenuto della cartella (il `config.js` è già il tuo). I file nuovi sono `assets/app.js` e `assets/commissione.js`.
 
-### 3. Modulo Google per i materiali (consigliato)
+### 3. Email per i materiali
 
-1. Con l'account Google del progetto crea un modulo su forms.google.com, titolo "Strade 2030 · Consegna materiali".
-2. Aggiungi 5 domande **Risposta breve**: Zona, Clan, Codice clan, Obiettivo, Sfida.
-3. Aggiungi una domanda **Caricamento file** (massimo 10 file, 100 MB ciascuno) e una **Paragrafo** "Cosa contiene ogni file".
-4. Menu ⋮ > **Ottieni link precompilato**: nelle 5 risposte brevi scrivi esattamente `ZONA`, `CLAN`, `CODICE`, `OBIETTIVO`, `SFIDA`, poi **Ottieni link** > **Copia link**.
-5. Incolla il link in `assets/goals.js`, alla riga `modulo: "",` tra le virgolette.
-
-I file finiscono nel Drive del progetto e le risposte in un foglio Google, ordinabile per zona, clan e obiettivo. Per caricare file i ragazzi devono accedere con un account Google.
-Se preferite l'email: in `goals.js` metti `modo: "email"` e l'indirizzo in `email: ""`.
+In `assets/goals.js`, alla riga `email: "strade2030@gmail.com",` c'è l'indirizzo a cui i clan devono mandare foto, documenti e video (es. `email: "strade2030@esempio.it",`).
+In ogni sfida locale i clan trovano il pulsante "Scrivi la mail" con l'oggetto già compilato: `ZONA - NOME CLAN - Obiettivo N - Sfida locale`, una mail per sfida, file oltre 20 MB come link. Finché l'indirizzo è vuoto, i clan vedono "le istruzioni arriveranno a breve".
 
 ### 4. Icone degli obiettivi
 
-Metti le 17 icone in `assets/img/sdg/` con i nomi `goal-1.png` ... `goal-17.png`.
+Metti le 17 icone in `assets/img/sdg/` con i nomi `goal-1.png` ... `goal-17.png`, poi in `assets/goals.js` cambia `SDG_ICONE = false` in `SDG_ICONE = true`. Fino ad allora si vedono i riquadri colorati.
 
 ### Cosa cambia per i clan
 

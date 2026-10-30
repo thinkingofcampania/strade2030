@@ -357,3 +357,24 @@ fieldset.pick legend{font-weight:700;padding:0 6px}
 .cred{margin-top:6px;padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--ok) 12%,var(--card));display:grid;gap:10px;justify-items:start}
 .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:16px}
 @media (max-width:600px){ .pin{grid-template-columns:1fr 70px auto} }
+
+/* Livelli degli obiettivi di futuro */
+.levels{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:0;counter-reset:lv}
+.levels li{display:flex;gap:10px;align-items:center;padding:12px 14px;background:var(--card);border:1px solid var(--line);position:relative}
+.levels li:first-child{border-radius:14px 0 0 14px}
+.levels li:last-child{border-radius:0 14px 14px 0}
+.levels li+li{border-left:0}
+.levels li b{display:block;font-size:15px;line-height:1.2}
+.levels li small{color:var(--ink-soft);font-size:12.5px}
+.levels li.on{background:color-mix(in srgb,var(--kerchief) 10%,var(--card))}
+.levels li.on small{color:var(--kerchief);font-weight:700}
+.lv-n{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;border:2px dashed var(--ink-soft);color:var(--ink-soft);font-family:var(--display);font-size:18px}
+.levels li.on .lv-n{border:0;background:var(--kerchief);color:var(--on-red)}
+.waiting{display:flex;gap:16px;align-items:flex-start;border:2px dashed var(--line);border-radius:16px;padding:18px 20px;background:repeating-linear-gradient(-45deg,transparent 0 14px,color-mix(in srgb,var(--paper-2) 60%,transparent) 14px 28px)}
+.waiting .lv-n{width:44px;height:44px;font-size:22px}
+.waiting h2{font-size:24px;text-transform:uppercase}
+.waiting p{margin:6px 0 0;color:var(--ink-soft)}
+.waiting .kicker{margin:0 0 4px!important;font-style:italic}
+@media (max-width:600px){ .levels{grid-template-columns:1fr} .levels li{border-radius:0!important;border-left:1px solid var(--line)!important} .levels li+li{border-top:0} .levels li:first-child{border-radius:14px 14px 0 0!important} .levels li:last-child{border-radius:0 0 14px 14px!important} }
+a.btn{display:inline-block;text-decoration:none}
+.sdg.mini{text-align:center;justify-content:center}
