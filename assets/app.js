@@ -727,8 +727,8 @@ function renderFuture(){
 /* Livelli: clan (ora), zona e Agorà regionale (dopo la sfida) */
 const LEVELS=[
   {k:"clan", n:"1", t:"Thinking of Città", s:"I clan", d:"Ogni clan sceglie i 3 obiettivi di futuro per il suo territorio."},
-  {k:"zona", n:"2", t:"Thinking of Zona", s:"Le zone", d:"Ogni zona, partendo dalle scelte dei suoi clan, sceglierà i suoi 3 obiettivi."},
-  {k:"regionale", n:"3", t:"Thinking of Campania", s:"L'Agorà regionale", d:"L'ultima tappa: all'Agorà la Campania sceglierà insieme i suoi 3 obiettivi."}];
+  {k:"zona", n:"2", t:"Thinking of Zona", s:"Agorà di Zona", d:"Ogni zona, partendo dalle scelte dei suoi clan, sceglierà i suoi 3 obiettivi."},
+  {k:"regionale", n:"3", t:"Thinking of Campania", s:"Agorà regionale", d:"L'ultima tappa: all'Agorà la Campania sceglierà insieme i suoi 3 obiettivi."}];
 const levelOpen = k => k==="clan" || (S.scelte||[]).some(r=>r.livello===k);
 function levelsHtml(){
   return `<ol class="levels">${LEVELS.map(L=>`<li class="${levelOpen(L.k)?"on":""}"><span class="lv-n">${L.n}</span><div><b>${L.t}</b><small>${L.s} · ${levelOpen(L.k)?(L.k==="clan"?"in corso":"aperto"):"in attesa"}</small></div></li>`).join("")}</ol>`;
