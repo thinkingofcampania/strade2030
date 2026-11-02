@@ -182,3 +182,11 @@ Metti le 17 icone in `assets/img/sdg/` con i nomi `goal-1.png` ... `goal-17.png`
 - **Obiettivi di futuro:** ogni clan vede e cambia solo le proprie scelte. Il grafico e l'elenco di tutti i clan sono nella scheda **Futuro** della commissione (con filtro per zona e file per Excel), da mostrare alla fine.
 - Testi delle prove e delle domande: `assets/goals.js` (campo `parts` e `campana`). Nomi dei livelli: `LIVELLI` nello stesso file.
 
+## Aggiornamento 7 · Campane di nuovo a risposta multipla
+
+**Database:** esegui `supabase/aggiornamento-6.sql` (SQL Editor > Run). Cancella le risposte campane date finora, perché le domande sono cambiate.
+
+- Le 17 domande campane sono a risposta multipla, con le fonti da consultare: un tentativo, 10 punti automatici. La commissione non le valuta più (la scheda Campane non c'è).
+- Risposte giuste e spiegazioni: tabella `campana_key` (colonna `correct`: 0 = prima opzione). L'ordine delle opzioni in `assets/goals.js` deve restare lo stesso.
+- Nei testi di `goals.js`: `*parola*` diventa corsivo; i link `https://...` diventano cliccabili.
+

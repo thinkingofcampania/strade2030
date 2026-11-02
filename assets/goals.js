@@ -4,8 +4,7 @@
    IMPOSTAZIONI che puoi cambiare tu (le prime righe qui sotto).
    Le risposte giuste delle domande globali NON stanno qui: sono nel
    database (tabella quiz_key). Le risposte di riferimento delle domande
-   campane sono nel database e la commissione le vede e le modifica
-   dalla scheda Campane.
+   campane sono nel database (tabella campana_key).
    ===================================================================== */
 
 /* Come i clan consegnano i materiali delle sfide locali (foto, documenti, video).
@@ -44,10 +43,13 @@ const LIVELLI = ["Primo passo", "Si entra nel vivo", "Il passo più lungo"];
 /* ---------------------------------------------------------------------
    I 17 OBIETTIVI
    q, o      = domanda globale e opzioni
-   campana   = ricerca sulla Campania a risposta aperta: domanda (q),
-               fonti da consultare [nome, link], nota (cosa scrivere).
-               La risposta di riferimento per la commissione è nel
-               database (tabella campana_key, colonna reference).
+   campana   = domanda sulla Campania a risposta multipla: domanda (q),
+               opzioni (o), fonti da consultare [nome, link], nota
+               facoltativa. La risposta giusta e la spiegazione sono nel
+               database (tabella campana_key): l'ordine delle opzioni qui
+               deve restare lo stesso.
+   Nei testi: *parola* = corsivo; i link che iniziano con https://
+   diventano cliccabili.
    ld        = breve introduzione della sfida locale
    parts     = le 3 prove della sfida locale, dalla più facile alla più
                difficile: t cosa fare, p punti (10), k criteri di
@@ -67,10 +69,16 @@ const GOALS = [
       "Asian Development Bank"
     ],
     "campana": {
-      "q": "Elencate gli ultimi 10 comuni campani per reddito pro capite: quali sono i 10 comuni della Campania dove si dichiara il reddito medio più basso? Indicate per ognuno provincia e reddito medio, poi scoprite in che posizione è il vostro comune.",
+      "q": "Qual è il comune campano con il reddito medio dichiarato più basso (dichiarazioni 2024, redditi 2023)?",
+      "o": [
+        "Rofrano",
+        "Castelvetere in Val Fortore",
+        "Castelfranco in Miscano",
+        "Baselice"
+      ],
       "src": [
         [
-          "MEF – Dipartimento delle Finanze, statistiche sulle dichiarazioni dei redditi (open data per comune)",
+          "MEF – Statistiche sulle dichiarazioni dei redditi (open data per comune)",
           "https://www1.finanze.gov.it/finanze/analisi_stat/public/index.php?opendata=yes"
         ],
         [
@@ -78,7 +86,7 @@ const GOALS = [
           "https://quifinanza.it/economia/comuni-piu-ricchi-campania/904186/"
         ]
       ],
-      "nota": "Il PIL non si calcola per ogni comune: per confrontare i comuni si usa il reddito medio dichiarato (reddito imponibile diviso per il numero di contribuenti). Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."
+      "nota": "Il PIL non si calcola per ogni comune: per confrontare i comuni si usa il reddito medio dichiarato."
     },
     "ld": "La povertà ha tante facce: cibo, casa, bollette, scuola. Scoprite chi è in difficoltà vicino a voi e chi lo aiuta.",
     "parts": [
@@ -124,18 +132,23 @@ const GOALS = [
       "UNICEF"
     ],
     "campana": {
-      "q": "La Campania è tra le regioni con più prodotti DOP e IGP d'Italia. Quanti sono i prodotti alimentari campani DOP e IGP (vini esclusi)? Elencate quelli della vostra provincia e scoprite qual è il prodotto campano che vale di più sul mercato.",
+      "q": "Qual è il prodotto DOP o IGP campano che vale di più sul mercato, secondo il Rapporto Ismea-Qualivita?",
+      "o": [
+        "Mozzarella di Bufala Campana DOP",
+        "Pasta di Gragnano IGP",
+        "Limone Costa d'Amalfi IGP",
+        "Pomodoro San Marzano dell'Agro Sarnese-Nocerino DOP"
+      ],
       "src": [
         [
-          "Qualivita – Atlante dei prodotti DOP IGP (cerca per regione)",
+          "Qualivita – Atlante e rapporti sui prodotti DOP IGP",
           "https://www.qualivita.it"
         ],
         [
-          "Rapporto Ismea-Qualivita sulle produzioni DOP IGP",
-          "https://www.qualivita.it"
+          "FirstOnline – Il food di qualità porta la Campania al vertice",
+          "https://www.firstonline.info/en/il-food-di-qualita-porta-la-campania-al-vertice-delle-regioni-con-fatturati-record/"
         ]
-      ],
-      "nota": "Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."
+      ]
     },
     "ld": "Il cibo buttato e la fame convivono anche sotto casa vostra. Scoprite chi produce vicino a voi e quanto si spreca.",
     "parts": [
@@ -181,14 +194,19 @@ const GOALS = [
       "Malaria"
     ],
     "campana": {
-      "q": "Chi nasce in Campania vive meno che nel resto d'Italia? Trovate la speranza di vita alla nascita in Campania, in Italia e in ognuna delle 5 province campane, mettetele in ordine e calcolate quanti anni separano la provincia migliore dalla media italiana.",
+      "q": "Quale provincia campana ha la speranza di vita alla nascita più bassa (ISTAT, 2024)?",
+      "o": [
+        "Salerno",
+        "Avellino",
+        "Napoli",
+        "Benevento"
+      ],
       "src": [
         [
           "ISTAT – Il benessere equo e sostenibile dei territori: Campania (BES 2025)",
           "https://www.istat.it/wp-content/uploads/2025/12/BesT2025_Campania.pdf"
         ]
-      ],
-      "nota": "Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."
+      ]
     },
     "ld": "La salute non è solo assenza di malattia: è ascolto, saper intervenire, accesso alle cure, benessere dei giovani.",
     "parts": [
@@ -244,7 +262,13 @@ const GOALS = [
       "21"
     ],
     "campana": {
-      "q": "Né a scuola né al lavoro: quanti giovani tra 15 e 29 anni in Campania non studiano e non lavorano (i cosiddetti NEET)? Trovate il dato per la Campania, l'Italia e le 5 province, e scoprite quale provincia sta meglio e quale peggio.",
+      "q": "In quale provincia campana è più bassa la quota di giovani tra 15 e 29 anni che non studiano e non lavorano (NEET, 2024)?",
+      "o": [
+        "Napoli",
+        "Caserta",
+        "Avellino",
+        "Salerno"
+      ],
       "src": [
         [
           "ISTAT – Il benessere equo e sostenibile dei territori: Campania (BES 2025)",
@@ -254,8 +278,7 @@ const GOALS = [
           "Openpolis – Dispersione e abbandono scolastico",
           "https://openpolis.it/3_labbandono-scolastico-e-un-problema-serio-al-sud-e-non-solo"
         ]
-      ],
-      "nota": "Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."
+      ]
     },
     "ld": "La dispersione scolastica in Campania è tra le più alte d'Italia. E nel vostro comune? Scoprite chi resta indietro e perché.",
     "parts": [
@@ -305,7 +328,13 @@ const GOALS = [
       "1968"
     ],
     "campana": {
-      "q": "Quante donne siedono nei consigli comunali campani? Trovate la percentuale per la Campania, l'Italia e le 5 province. Poi contate le donne nel consiglio comunale del vostro comune: siete sopra o sotto la media?",
+      "q": "Quale percentuale dei consiglieri comunali in Campania sono donne (2024)?",
+      "o": [
+        "Circa il 12%",
+        "Circa il 28%",
+        "Circa il 34%",
+        "Circa il 45%"
+      ],
       "src": [
         [
           "ISTAT – Il benessere equo e sostenibile dei territori: Campania (BES 2025)",
@@ -315,8 +344,7 @@ const GOALS = [
           "Ministero dell'Interno – Anagrafe degli amministratori locali",
           "https://dait.interno.gov.it/elezioni/anagrafe-amministratori"
         ]
-      ],
-      "nota": "Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."
+      ]
     },
     "ld": "La parità passa dai nomi delle strade, dal lavoro, dalla rappresentanza e dalla libertà dalla violenza. Guardate il vostro comune con questi occhi.",
     "parts": [
@@ -362,18 +390,23 @@ const GOALS = [
       "2015"
     ],
     "campana": {
-      "q": "Il mare e i laghi della Campania sono puliti? Sul Portale Acque del Ministero della Salute trovate come è classificata l'acqua di balneazione più vicina a voi (eccellente, buona, sufficiente, scarsa) e scoprite se in Campania ci sono tratti di costa dove è vietato fare il bagno, e perché.",
+      "q": "Quanta acqua potabile preleva ogni anno la Campania, e che quota è del totale italiano (ISTAT, 2022)?",
+      "o": [
+        "0,3 miliardi di m³, circa il 3%",
+        "0,9 miliardi di m³, quasi il 10%",
+        "2,4 miliardi di m³, circa il 25%",
+        "4,5 miliardi di m³, circa la metà"
+      ],
       "src": [
         [
-          "Ministero della Salute – Portale Acque",
-          "https://www.portaleacque.salute.gov.it"
+          "ISTAT – Le statistiche sull'acqua, Giornata mondiale dell'acqua 2024",
+          "https://www.istat.it/it/files/2024/03/Report-GMA-Anno-2024.pdf"
         ],
         [
-          "ARPAC – Balneazione",
-          "https://www.arpacampania.it"
+          "ISTAT – Le statistiche dell'Istat sull'acqua",
+          "https://www.istat.it/comunicato-stampa/le-statistiche-dellistat-sullacqua-anni-2020-2022/"
         ]
-      ],
-      "nota": "Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."
+      ]
     },
     "ld": "Dal Sarno ai Regi Lagni, i corsi d'acqua campani raccontano una storia di inquinamento e di riscatto. Qual è l'acqua del vostro territorio?",
     "parts": [
@@ -423,18 +456,23 @@ const GOALS = [
       "Pantelleria"
     ],
     "campana": {
-      "q": "Quanto sole usa il vostro comune? Con l'Atlaimpianti del GSE trovate quanti impianti fotovoltaici ci sono nel vostro comune e quanta potenza producono in tutto. Confrontateli con quelli di un comune vicino: chi sfrutta meglio il sole?",
+      "q": "Quale provincia campana ha più potenza fotovoltaica installata (GSE, fine 2024)?",
+      "o": [
+        "Napoli",
+        "Caserta",
+        "Salerno",
+        "Avellino"
+      ],
       "src": [
         [
-          "GSE – Atlaimpianti (mappa degli impianti)",
-          "https://atla.gse.it"
+          "GSE – Solare fotovoltaico, Rapporto statistico 2024",
+          "https://www.rinnovabili.it/wp-content/uploads/2025/09/Solare-Fotovoltaico-Rapporto-Statistico-2024.pdf"
         ],
         [
-          "GSE – Rapporti statistici sul fotovoltaico",
+          "GSE – Gestore dei Servizi Energetici",
           "https://www.gse.it"
         ]
-      ],
-      "nota": "Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."
+      ]
     },
     "ld": "Il sole in Campania non manca. Quanto lo usiamo, e quanta energia sprechiamo?",
     "parts": [
@@ -480,19 +518,24 @@ const GOALS = [
       "OCSE"
     ],
     "campana": {
-      "q": "Lavorare in Campania: trovate il tasso di occupazione tra i 20 e i 64 anni in Campania, in Italia e nelle 5 province. Quanti punti mancano alla Campania per raggiungere la media italiana? E quale provincia ci va più vicino?",
+      "q": "Quanti punti separano il tasso di occupazione della Campania (20-64 anni) dalla media italiana (2024)?",
+      "o": [
+        "Circa 5 punti",
+        "Circa 10 punti",
+        "Circa 18 punti",
+        "Circa 30 punti"
+      ],
       "src": [
         [
           "ISTAT – Il benessere equo e sostenibile dei territori: Campania (BES 2025)",
           "https://www.istat.it/wp-content/uploads/2025/12/BesT2025_Campania.pdf"
         ]
-      ],
-      "nota": "Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."
+      ]
     },
     "ld": "Lavoro dignitoso vuol dire mestieri che non spariscono, opportunità per i giovani, sicurezza e diritti.",
     "parts": [
       {
-        "t": "Intervistate un artigiano o un lavoratore di un mestiere che rischia di sparire (il liutaio, il ceramista, il casaro, il pastaio, il presepista...). Video o audio.",
+        "t": "Intervistate un artigiano o un lavoratore di un mestiere che rischia di sparire (il liutaio, il ceramista, il casaro, il pastaio, il presepista...). Video o audio di massimo 3-5 minuti.",
         "p": 10,
         "k": [
           "Qualità dell'intervista",
@@ -533,14 +576,19 @@ const GOALS = [
       "Pirelli"
     ],
     "campana": {
-      "q": "Ogni anno il rapporto Pendolaria di Legambiente indica le linee ferroviarie peggiori d'Italia. Quale linea campana c'è? Raccogliete almeno 3 dati che spiegano perché (passeggeri, età dei treni, disservizi) e scoprite quanti anni hanno in media i suoi treni rispetto a quelli di Trenitalia in Campania.",
+      "q": "Quale linea ferroviaria campana il rapporto Pendolaria di Legambiente indica tra le peggiori d'Italia?",
+      "o": [
+        "Cumana",
+        "Linea 1 della metropolitana di Napoli",
+        "Napoli-Salerno via Cava de' Tirreni",
+        "Ex Circumvesuviana"
+      ],
       "src": [
         [
-          "Legambiente – Rapporto Pendolaria (ultima edizione)",
+          "Legambiente – Rapporto Pendolaria (20ª edizione)",
           "https://www.legambiente.it/wp-content/uploads/2025/12/Rapporto-Pendolaria-20esima-edizione-1.pdf"
         ]
-      ],
-      "nota": "Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."
+      ]
     },
     "ld": "Un'infrastruttura serve se tutti possono usarla: trasporti, internet, strade senza barriere.",
     "parts": [
@@ -563,12 +611,12 @@ const GOALS = [
         ]
       },
       {
-        "t": "Inviate al Comune la segnalazione delle barriere trovate, con proposte di soluzione, e allegate la ricevuta o la risposta.",
+        "t": "Inviare al Comune una segnalazione delle barriere riscontrate, accompagnata da una proposta di soluzione, allegando la ricevuta di invio o l'eventuale risposta ricevuta. Inviare inoltre suggerimenti relativi agli orari e ai collegamenti che la popolazione ritiene utili (prova 1), ma che attualmente risultano mancanti.",
         "p": 10,
         "k": [
           "Segnalazione inviata",
           "Proposte di soluzione",
-          "Ricevuta o risposta"
+          "Suggerimenti su orari e collegamenti"
         ]
       }
     ]
@@ -586,14 +634,19 @@ const GOALS = [
       "Indice di Sen"
     ],
     "campana": {
-      "q": "Quanto è più povera una famiglia campana di una italiana? Nel BES dei territori trovate il reddito disponibile delle famiglie (valore mediano per persona) in Campania, in Italia e nelle 5 province, e la quota di pensionati con una pensione bassa. Quale provincia sta peggio?",
+      "q": "Quale provincia campana ha il reddito disponibile delle famiglie più basso (valore mediano per persona, 2022)?",
+      "o": [
+        "Avellino",
+        "Napoli",
+        "Benevento",
+        "Salerno"
+      ],
       "src": [
         [
           "ISTAT – Il benessere equo e sostenibile dei territori: Campania (BES 2025)",
           "https://www.istat.it/wp-content/uploads/2025/12/BesT2025_Campania.pdf"
         ]
-      ],
-      "nota": "Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."
+      ]
     },
     "ld": "Le disuguaglianze hanno tante forme: reddito, età, disabilità, origine. Incontrate chi le vive nel vostro territorio.",
     "parts": [
@@ -645,23 +698,28 @@ const GOALS = [
       "2011"
     ],
     "campana": {
-      "q": "Ecosistema Urbano di Legambiente mette in classifica oltre 100 città italiane per qualità dell'ambiente (aria, acqua, rifiuti, verde, trasporti). In che posizione sono i 5 capoluoghi campani nell'ultima edizione? Qual è il migliore e in quale indicatore va peggio il capoluogo della vostra provincia?",
+      "q": "Quale capoluogo campano ha la posizione migliore nella classifica Ecosistema Urbano 2025 di Legambiente?",
+      "o": [
+        "Salerno",
+        "Napoli",
+        "Caserta",
+        "Avellino"
+      ],
       "src": [
         [
-          "Legambiente – Ecosistema Urbano (ultima edizione)",
-          "https://www.legambiente.it"
+          "Legambiente – Ecosistema Urbano",
+          "https://www.legambiente.it/attivita-scientifiche/ecosistema-urbano/"
         ],
         [
-          "Ecosistema Urbano 2025: le posizioni di Salerno e degli altri capoluoghi",
+          "Ecosistema Urbano 2025: le posizioni dei capoluoghi campani",
           "https://occhiodisalerno.it/salerno-ecosistema-urbano-2025"
         ]
-      ],
-      "nota": "Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."
+      ]
     },
     "ld": "Una città sostenibile ha spazi vivi, si muove bene e si prende cura dei suoi luoghi.",
     "parts": [
       {
-        "t": "Mappate i luoghi abbandonati o degradati del vostro territorio (una villa chiusa, un campetto rotto, una scuola vuota), con foto e stato.",
+        "t": "Mappate i luoghi abbandonati o degradati del vostro territorio (una villa chiusa, un campetto inutilizzabile, una scuola vuota), con foto e stato.",
         "p": 10,
         "k": [
           "Completezza",
@@ -670,7 +728,7 @@ const GOALS = [
         ]
       },
       {
-        "t": "Organizzate una giornata di pulizia e cura in uno dei luoghi mappati, coinvolgendo altre persone del paese.",
+        "t": "Organizzate una giornata di pulizia e cura in uno dei luoghi mappati, coinvolgendo altre persone del paese e/o associazioni.",
         "p": 10,
         "k": [
           "Azione realizzata",
@@ -705,18 +763,23 @@ const GOALS = [
       "L'etichettatura degli OGM"
     ],
     "campana": {
-      "q": "Quanto differenzia il vostro comune? Trovate la percentuale di raccolta differenziata del vostro comune sul Catasto rifiuti dell'ISPRA e confrontatela con la vostra provincia, la Campania e l'Italia. Quale provincia campana differenzia di più?",
+      "q": "Quale provincia campana ha la percentuale di raccolta differenziata più alta (2023)?",
+      "o": [
+        "Benevento",
+        "Napoli",
+        "Salerno",
+        "Caserta"
+      ],
       "src": [
         [
-          "ISPRA – Catasto rifiuti (dati per comune)",
+          "ISPRA – Catasto rifiuti",
           "https://www.catasto-rifiuti.isprambiente.it"
         ],
         [
           "ISTAT – Il benessere equo e sostenibile dei territori: Campania (BES 2025)",
           "https://www.istat.it/wp-content/uploads/2025/12/BesT2025_Campania.pdf"
         ]
-      ],
-      "nota": "Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."
+      ]
     },
     "ld": "Prima di comprare e buttare, si può scegliere lo sfuso, riparare, scambiare, differenziare.",
     "parts": [
@@ -730,10 +793,10 @@ const GOALS = [
         ]
       },
       {
-        "t": "Riparate invece di buttare: con l'aiuto di un riparatore del territorio, riparate almeno 5 oggetti del clan o del paese (vestiti, bici, zaini, attrezzatura).",
+        "t": "Riparare invece di buttare: con l'aiuto di un riparatore del territorio o di una persona che ha conoscenze in materia, imparate a riparare uno o più oggetti di uso comune del clan o del paese (bici, zaini, attrezzatura: ad esempio rattoppare, cucire, sostituire un pezzo o riparare una camera d'aria) e mettetelo in pratica con le vostre mani.",
         "p": 10,
         "k": [
-          "Riparazioni fatte davvero",
+          "Riparazione fatta con le vostre mani",
           "Cosa avete imparato",
           "Foto prima e dopo"
         ]
@@ -762,23 +825,28 @@ const GOALS = [
       "Convenzione di Rio"
     ],
     "campana": {
-      "q": "Più cemento vuol dire più caldo in città e più allagamenti quando piove forte. Quanta parte del territorio è coperta da cemento e asfalto (suolo consumato)? Trovate la percentuale per la Campania, l'Italia, le 5 province e il vostro comune.",
+      "q": "Quale parte del territorio della provincia di Napoli è coperta da cemento e asfalto (suolo impermeabilizzato, 2023)?",
+      "o": [
+        "Circa il 7%",
+        "Circa il 15%",
+        "Circa il 35%",
+        "Circa il 60%"
+      ],
       "src": [
         [
-          "ISPRA – Rapporto sul consumo di suolo (dati per comune)",
+          "ISPRA – Consumo di suolo",
           "https://www.isprambiente.gov.it"
         ],
         [
           "ISTAT – Il benessere equo e sostenibile dei territori: Campania (BES 2025)",
           "https://www.istat.it/wp-content/uploads/2025/12/BesT2025_Campania.pdf"
         ]
-      ],
-      "nota": "Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."
+      ]
     },
     "ld": "Il clima cambia anche nel vostro territorio. Misurate il vostro impatto e riducetelo.",
     "parts": [
       {
-        "t": "Calcolate l'impronta di CO₂ della vostra ultima route o uscita (trasporti, cibo, rifiuti) con un calcolatore online.",
+        "t": "Calcolate l'impronta di CO₂ della vostra ultima route o uscita (trasporti, cibo, rifiuti) con il calcolatore di myclimate: https://co2.myclimate.org/it/event_calculators/new",
         "p": 10,
         "k": [
           "Dati completi",
@@ -819,18 +887,23 @@ const GOALS = [
       "San Giovanni a Teduccio"
     ],
     "campana": {
-      "q": "Bandiera Blu: quante località campane l'hanno ricevuta nell'ultima edizione? Elencatele divise per provincia e scoprite quale provincia ne ha di più. Cosa deve garantire un comune per ottenerla?",
+      "q": "Quante località campane hanno ricevuto la Bandiera Blu 2025?",
+      "o": [
+        "8",
+        "14",
+        "20",
+        "27"
+      ],
       "src": [
         [
           "FEE Italia – Bandiera Blu",
           "https://www.bandierablu.org"
         ],
         [
-          "Tuttitalia – Elenco delle località Bandiera Blu",
+          "Tuttitalia – Le località Bandiera Blu 2025",
           "https://www.tuttitalia.it/bandiera-blu/2025-spiagge/"
         ]
-      ],
-      "nota": "Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."
+      ]
     },
     "ld": "Tutto ciò che buttiamo a terra, prima o poi, arriva al mare, anche dall'entroterra.",
     "parts": [
@@ -874,12 +947,18 @@ const GOALS = [
     "q": "Qual è il fiore simbolo del Parco Nazionale del Cilento, Vallo di Diano e Alburni?",
     "o": [
       "Stella alpina",
-      "Primula di Palinuro",
+      "*Primula palinuri*",
       "Giglio di mare",
       "Orchidea selvatica"
     ],
     "campana": {
-      "q": "Quanta natura protetta ha la Campania? Elencate i parchi nazionali e i parchi regionali campani, trovate quello più vicino a voi e scoprite quanto è grande e quale animale o pianta lo rappresenta meglio.",
+      "q": "Quanti parchi nazionali ci sono in Campania?",
+      "o": [
+        "1",
+        "2",
+        "4",
+        "6"
+      ],
       "src": [
         [
           "Regione Campania – Parchi e aree protette",
@@ -889,8 +968,7 @@ const GOALS = [
           "Ministero dell'Ambiente – Elenco ufficiale delle aree protette",
           "https://www.mase.gov.it"
         ]
-      ],
-      "nota": "Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."
+      ]
     },
     "ld": "Quante specie vivono nel vostro territorio? Conoscete un'area verde vicina, in campagna o in città, e prendetevene cura.",
     "parts": [
@@ -936,18 +1014,23 @@ const GOALS = [
       "Torre Annunziata"
     ],
     "campana": {
-      "q": "Dalla camorra alla comunità: quanti beni confiscati alla criminalità ci sono nella vostra provincia? Su OpenRE.G.I.O. dell'Agenzia nazionale trovate il numero, i 3 comuni campani con più beni e quanti sono già stati destinati a un uso sociale.",
+      "q": "Secondo i dati dell'Agenzia nazionale analizzati da Eurispes, quale quota dei beni confiscati alla criminalità in Italia si trova in Sicilia, Campania e Calabria insieme?",
+      "o": [
+        "Circa il 20%",
+        "Circa il 40%",
+        "Circa il 60%",
+        "Circa l'85%"
+      ],
       "src": [
+        [
+          "QdS – Beni confiscati, il 60% tra Sicilia, Campania e Calabria (ricerca Eurispes)",
+          "https://qds.it/beni-confiscati-patrimonio-nazionale-da-46-miliardi-60-percento-distribuito-sicilia-campania-calabria/"
+        ],
         [
           "ANBSC – OpenRE.G.I.O., i dati sui beni confiscati",
           "https://openregio.anbsc.it"
-        ],
-        [
-          "Confiscati Bene – i beni confiscati in Italia",
-          "https://www.confiscatibene.it"
         ]
-      ],
-      "nota": "Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."
+      ]
     },
     "ld": "Pace e giustizia si costruiscono con la memoria, la legalità e la partecipazione, a partire dal vostro comune.",
     "parts": [
@@ -993,14 +1076,23 @@ const GOALS = [
       "232"
     ],
     "campana": {
-      "q": "Su OpenCoesione cercate i progetti pagati con fondi europei e nazionali nel vostro comune: quanti sono e quanto valgono in tutto? Qual è il progetto più grande? Sceglietene uno e scoprite se è concluso, in corso o fermo.",
+      "q": "Quanto valgono in tutto i progetti delle politiche di coesione in Campania nel ciclo 2014-2020, secondo OpenCoesione?",
+      "o": [
+        "Circa 2 miliardi di euro",
+        "Circa 8 miliardi di euro",
+        "Circa 20 miliardi di euro",
+        "Circa 60 miliardi di euro"
+      ],
       "src": [
         [
           "OpenCoesione – i progetti finanziati nel tuo territorio",
           "https://opencoesione.gov.it"
+        ],
+        [
+          "Eunews – Il profilo della coesione in Campania",
+          "https://www.eunews.it/post_true/il-profilo-della-coesione-in-regione-campania-briefing-note/"
         ]
-      ],
-      "nota": "Scrivete i numeri che avete trovato, l'anno a cui si riferiscono e la pagina della fonte."
+      ]
     },
     "ld": "Nessun obiettivo si raggiunge da soli. Trovate un'altra realtà del territorio e costruite qualcosa insieme.",
     "parts": [

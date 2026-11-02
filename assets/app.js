@@ -368,7 +368,7 @@ const dots = i => `<span class="lvl-dots" aria-hidden="true">${[0,1,2].map(j=>`<
 const partsHtml = (parts, prefix, scores) => `<ol class="parts prove">${parts.map((p,i)=>{
   const k=prefix+(i+1), sc=scores?.[k];
   return `<li><div class="part-top"><span class="lvl">${dots(i)} Prova ${i+1} · ${esc(LIVELLI[i]||"")}</span><span class="pmax">${sc!=null?`<b>${sc}</b>/${p.p}`:`${p.p} punti`}</span></div>
-    <p class="prova-t">${esc(p.t)}</p>
+    <p class="prova-t">${rich(p.t)}</p>
     ${p.r?`<div class="rules-box"><b>Regole obbligatorie</b><ul>${p.r.map(r=>`<li>${esc(r)}</li>`).join("")}</ul></div>`:""}
     <div class="crit-chips">${p.k.map(x=>`<span>${esc(x)}</span>`).join("")}</div></li>`; }).join("")}</ol>`;
 function srcHtml(src){
@@ -406,10 +406,10 @@ function openGoal(n){
   const opts = G.o.map((o,i)=>{
     let cls="opt";
     if(answered){ if(i===a.correct) cls+=" right"; else if(i===a.answer) cls+=" wrong"; }
-    return `<button class="${cls}" data-opt="${i}" aria-pressed="${pendingChoice===i}" ${answered?"disabled":""}>${esc(o)}</button>`;
+    return `<button class="${cls}" data-opt="${i}" aria-pressed="${pendingChoice===i}" ${answered?"disabled":""}>${rich(o)}</button>`;
   }).join("");
   const globalRes = answered
-    ? `<div class="result">${a.answer===a.correct?`<b>Esatto, +${PTS_GLOBAL} punti.</b>`:`<b>Risposta sbagliata.</b> Quella giusta era: ${esc(G.o[a.correct])}.`} ${esc(a.feedback||"")}</div>`
+    ? `<div class="result">${a.answer===a.correct?`<b>Esatto, +${PTS_GLOBAL} punti.</b>`:`<b>Risposta sbagliata.</b> Quella giusta era: ${rich(G.o[a.correct])}.`} ${rich(a.feedback||"")}</div>`
     : `<div class="row-actions"><button class="btn" id="confirmAns" ${pendingChoice==null?"disabled":""}>Conferma risposta</button><span class="muted small">Avete un solo tentativo: consultatevi prima.</span></div>`;
 
   // Campana: a risposta multipla (se ha le opzioni) o aperta
@@ -419,9 +419,9 @@ function openGoal(n){
     const done=!!cm;
     const copts=C.o.map((o,i)=>{ let cls="opt";
       if(done){ if(i===cm.correct) cls+=" right"; else if(i===cm.choice) cls+=" wrong"; }
-      return `<button class="${cls}" data-copt="${i}" aria-pressed="${pendingCamp===i}" ${done?"disabled":""}>${esc(o)}</button>`; }).join("");
+      return `<button class="${cls}" data-copt="${i}" aria-pressed="${pendingCamp===i}" ${done?"disabled":""}>${rich(o)}</button>`; }).join("");
     campBlock = `<div class="opts">${copts}</div>` + (done
-      ? `<div class="result">${cm.choice===cm.correct?`<b>Esatto, +${PTS_CAMPANA} punti.</b>`:`<b>Risposta sbagliata.</b> Quella giusta era: ${esc(C.o[cm.correct])}.`} ${esc(cm.feedback||"")}</div>`
+      ? `<div class="result">${cm.choice===cm.correct?`<b>Esatto, +${PTS_CAMPANA} punti.</b>`:`<b>Risposta sbagliata.</b> Quella giusta era: ${rich(C.o[cm.correct])}.`} ${rich(cm.feedback||"")}</div>`
       : `<div class="row-actions"><button class="btn" id="confirmCamp" ${pendingCamp==null?"disabled":""}>Conferma risposta</button><span class="muted small">Un solo tentativo: cercate prima nella fonte.</span></div>`);
   } else campBlock = ce
     ? `<p><span class="status ok">Valutata: ${ce.points}/${PTS_CAMPANA} punti</span></p>
@@ -464,11 +464,11 @@ function openGoal(n){
     <div class="m-body">
       <section class="m-sec">
         <h3>Sfida globale <span class="pts">${PTS_GLOBAL} punti</span></h3>
-        <p class="q">${esc(G.q)}</p><div class="opts">${opts}</div>${globalRes}
+        <p class="q">${rich(G.q)}</p><div class="opts">${opts}</div>${globalRes}
       </section>
       <section class="m-sec">
-        <h3>Sfida campana <span class="pts">fino a ${PTS_CAMPANA} punti</span></h3>
-        <p class="q">${esc(C.q)}</p>
+        <h3>Sfida campana <span class="pts">${PTS_CAMPANA} punti</span></h3>
+        <p class="q">${rich(C.q)}</p>
         ${C.nota?`<p class="muted small"><i>${esc(C.nota)}</i></p>`:""}
         <p class="source"><b>Fonti da consultare:</b> ${srcHtml(C.src)}</p>
         ${campBlock}
@@ -650,7 +650,7 @@ function renderBoard(){
   const all=S.board, rows=S.boardZona ? all.filter(r=>r.zona===S.boardZona) : all;
   const max=Math.max(1,...rows.map(r=>r.totale));
   let pos=0, prev=null;
-  $("#app").innerHTML = `<section class="hero"><p class="kicker">Strade 2030 · Il domani è oggi</p><h1>Classifica dei clan</h1><p>${all.length} clan in cammino. Le domande globali contano subito; i punti delle sfide campane e locali compaiono appena la commissione le valuta.</p></section>
+  $("#app").innerHTML = `<section class="hero"><p class="kicker">Strade 2030 · Il domani è oggi</p><h1>Classifica dei clan</h1><p>${all.length} clan in cammino. Domande globali e campane contano subito; i punti delle sfide locali compaiono appena la commissione le valuta.</p></section>
    <div class="filters"><select id="zf" aria-label="Filtra per zona" class="pill-select"><option value="">Tutte le zone</option>${ZONE.map(z=>`<option ${z===S.boardZona?"selected":""}>${esc(z)}</option>`).join("")}</select></div>
    <div class="panel board-panel" style="margin-bottom:60px">
     ${rows.length?`<ol class="lb">${rows.map((r,i)=>{ if(r.totale!==prev){pos=i+1;prev=r.totale;}
@@ -765,7 +765,7 @@ function renderRules(){
   $("#app").innerHTML = `<section class="hero"><p class="kicker">Strade 2030 · Thinking of Campania</p><h1>Come funziona</h1><p>Ogni obiettivo è una tappa con tre sfide. Potete affrontarle nell'ordine che volete e in quanto tempo volete. <button class="linkbtn" type="button" data-spirit>Lo spirito del gioco</button></p></section>
   <div class="rules" style="padding-bottom:24px">
     <div class="panel"><span class="big">${PTS_GLOBAL}</span><h3>Sfida globale</h3><p>Una domanda sul mondo. Un solo tentativo: risposta giusta, ${PTS_GLOBAL} punti; sbagliata, zero. Studiate e confrontatevi prima di confermare.</p></div>
-    <div class="panel"><span class="big">${PTS_CAMPANA}</span><h3>Sfida campana</h3><p>Una piccola ricerca sulla Campania: leggete le fonti indicate e scrivete la vostra risposta con i dati, l'anno e la fonte. La commissione assegna fino a ${PTS_CAMPANA} punti.</p></div>
+    <div class="panel"><span class="big">${PTS_CAMPANA}</span><h3>Sfida campana</h3><p>Una domanda sulla Campania, con le fonti dove cercare la risposta. Leggetele prima di rispondere: avete un solo tentativo. Risposta giusta, ${PTS_CAMPANA} punti.</p></div>
     <div class="panel"><span class="big">${LOCAL_MAX}</span><h3>Sfida locale</h3><p>3 prove sul vostro territorio, dalla più semplice alla più impegnativa, ${LOCAL_MAX/3} punti ciascuna. Potete farle tutte o solo alcune, anche in momenti diversi. Inviate il materiale per email a ${esc(CONSEGNA.email||"gli organizzatori")}; la commissione vota prova per prova.</p></div>
     <div class="panel"><span class="big">+${PTS_BONUS}</span><h3>Tappa completa</h3><p>Se su uno stesso obiettivo rispondete giusto alla domanda globale e ottenete punti nella sfida locale, ricevete un bonus di ${PTS_BONUS} punti.</p></div>
   </div>
