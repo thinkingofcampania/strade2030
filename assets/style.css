@@ -499,3 +499,18 @@ label.f{font-weight:600}
 .parts.prove .part-top span:first-child::before{content:none}
 .parts.prove .rules-box li{border:0;padding:0;background:none;border-radius:0;counter-increment:none;margin:2px 0}
 .prova-t a,.q a,.result a{overflow-wrap:anywhere}
+
+/* ---------- Pulsante fisso "Perché giochiamo?" (tutte le pagine) ---------- */
+.spirit-fab{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:50;display:flex;align-items:center;gap:10px;
+  border:0;border-radius:999px;padding:10px 18px 10px 12px;background:var(--kerchief);color:var(--on-red);
+  box-shadow:0 6px 20px rgba(0,0,0,.25);font:inherit;text-align:left;cursor:pointer;transition:transform .15s ease}
+.spirit-fab:hover{transform:translateY(-2px)}
+.spirit-fab svg{width:34px;height:34px;flex:none;padding:7px;border-radius:50%;background:rgba(255,255,255,.2)}
+.spirit-fab b{display:block;font-size:16px;line-height:1.1}
+.spirit-fab small{display:block;font-size:12.5px;opacity:.9;font-weight:600}
+.spirit-fab:not(.seen) svg{animation:fab-beat 1.6s ease-in-out infinite}
+@keyframes fab-beat{0%,60%,100%{transform:scale(1)}20%{transform:scale(1.18)}40%{transform:scale(.95)}}
+@media (prefers-reduced-motion:reduce){.spirit-fab:not(.seen) svg{animation:none}}
+@media (max-width:600px){.spirit-fab{right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));padding:8px 14px 8px 8px}.spirit-fab small{display:none}.spirit-fab b{font-size:15px}}
+main,#app{padding-bottom:70px}
+.spirit .spirit-lead{color:var(--kerchief)}

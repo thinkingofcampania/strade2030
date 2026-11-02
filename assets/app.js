@@ -22,7 +22,7 @@ function tally(){
     const a=S.answers[G.n], ok=!!a && a.answer===a.correct; if(ok) g+=PTS_GLOBAL;
     const ce=S.campEvals[G.n]; if(ce) c+=ce.points;
     const e=S.evals[G.n]; if(e){ l+=e.points; done++; }
-    if(ok && e && e.points>0) b+=PTS_BONUS;
+    if(e && G.parts.every((x,i)=>(e.criteria?.["d"+(i+1)]||0)>0)) b+=PTS_BONUS;   // sfida locale completa: tutte le prove valutate > 0
   }
   return {g,c,l,b,tot:g+c+l+b,done};
 }
@@ -107,7 +107,7 @@ $("#logout").onclick = async ()=>{
 };
 
 /* ---------- Lo spirito del gioco ---------- */
-function openSpirit(){ const d=$("#spiritDlg"); if(!d.open) d.showModal(); }
+function openSpirit(){ const d=$("#spiritDlg"); if(!d.open) d.showModal(); const f=$("#spiritFab"); if(f) f.classList.add("seen"); }
 $("#spiritOk").onclick=()=>{ try{ localStorage.setItem("strade2030-spirito","1"); }catch(e){} $("#spiritDlg").close(); };
 $("#spiritDlg").addEventListener("cancel",()=>{ try{ localStorage.setItem("strade2030-spirito","1"); }catch(e){} });
 document.addEventListener("click", e=>{ if(e.target.closest("[data-spirit]")) openSpirit(); });
@@ -174,7 +174,7 @@ function renderAuth(){
     <p class="kicker">Thinking of Campania · Il domani è oggi</p>
     <h1>Strade 2030</h1>
     <p class="claim">Diciassette strade, un solo territorio.</p>
-    <p class="muted">Ogni obiettivo dell'Agenda 2030 vi aspetta con tre sfide: una domanda sul mondo, una sulla Campania e una missione da compiere nel vostro territorio. <button class="linkbtn" type="button" data-spirit>Lo spirito del gioco</button></p>
+    <p class="muted">Diciassette obiettivi, diciassette tappe: guardare il mondo, conoscere la Campania, cambiare il vostro territorio. <button class="linkbtn" type="button" data-spirit>Lo spirito del gioco</button></p>
     <div class="seg" role="group">
       <button type="button" data-mode="register" aria-pressed="${m==="register"}">Registra il clan</button>
       <button type="button" data-mode="login" aria-pressed="${m!=="register"}">Siamo già registrati</button>
@@ -309,32 +309,6 @@ function tileMarks(n){
   const l = e ? `<span class="mark done">Locale ${e.points}</span>` : s ? `<span class="mark sent">Locale inviata</span>` : `<span class="mark">Locale</span>`;
   return g+c+l;
 }
-/* Percorso: dove si trova il clan sulla strada verso la coppa.
-   Passi: 17 domande globali + 17 campane + 3 prove locali per obiettivo. */
-function percorso(){
-  const p=progress();
-  const prove=GOALS.reduce((s,G)=>{ const sc=S.evals[G.n]?.criteria||{}; return s+G.parts.filter((x,i)=>(sc["d"+(i+1)]||0)>0).length; },0);
-  const totProve=GOALS.reduce((s,G)=>s+G.parts.length,0);
-  const fatti=Math.min(17,p.globali)+Math.min(17,p.campane)+prove, tot=34+totProve;
-  const tappa=(34+SBLOCCO_LOCALI)/tot*100;
-  const pos=p.sbloccato ? Math.max(tappa, fatti/tot*100) : Math.min(tappa-2, fatti/tot*100);
-  const finito = fatti>=tot;
-  const testo = finito ? `<b>Strada completata!</b> Avete fatto tutte le prove di tutti gli obiettivi: la coppa è vostra.`
-    : p.sbloccato ? `<b>Obiettivi di futuro sbloccati: ora non fermatevi.</b> Scegliete le sfide locali che vi stanno più a cuore e buttate il cuore oltre l'ostacolo: ogni prova conta, anche una sola.`
-    : `<b>Prima tappa: gli obiettivi di futuro.</b> Poi la strada continua con le prove locali, fino alla coppa.`;
-  const cup=`<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 6h20v4h8v5c0 6-4.5 10-10 10.6-1.4 3.6-4.3 6-7.5 6.3V37h6v5H17.5v-5h6v-5.1c-3.2-.3-6.1-2.7-7.5-6.3C10.5 25 6 21 6 15v-5h8V6zm-4 8v1c0 3.6 2.4 6.3 5.4 6.9-.9-2.2-1.4-4.6-1.4-7.2V14h-4zm28 0h-4v.7c0 2.6-.5 5-1.4 7.2 3-.6 5.4-3.3 5.4-6.9v-1z" fill="currentColor"/></svg>`;
-  return `<section class="percorso ${p.sbloccato?"is-open":""} ${finito?"is-done":""}" aria-label="A che punto siete">
-    <p class="perc-txt">${testo}</p>
-    <div class="track" role="img" aria-label="Avete percorso il ${Math.round(fatti/tot*100)}% della strada">
-      <div class="line"><i style="width:${pos}%"></i></div>
-      <span class="stop start" style="left:0"><b></b><small>Partenza</small></span>
-      <span class="stop flag ${p.sbloccato?"done":""}" style="left:${tappa}%"><b>${p.sbloccato?"✓":""}</b><small>Obiettivi di futuro</small></span>
-      <span class="stop cup ${finito?"done":""}" style="left:100%">${cup}<small>Traguardo</small></span>
-      <span class="you" style="left:${pos}%"><em>Voi</em></span>
-    </div>
-    <p class="perc-num"><b>${Math.round(fatti/tot*100)}%</b> della strada · prove locali valutate: <b>${prove}</b> di ${totProve}</p>
-  </section>`;
-}
 function progressCard(){
   const p=progress();
   const bar=(v,max,label)=>`<div class="pbar"><span>${label}</span><b>${Math.min(v,max)}/${max}</b><i style="--w:${Math.min(100,v/max*100)}%"></i></div>`;
@@ -353,7 +327,6 @@ function renderMap(){
     <div class="clan-line"><span class="chip">${esc(c.name)}</span><span class="chip soft">Zona ${esc(c.zona)}${c.grp?" · "+esc(c.grp):""}</span><span class="chip soft">Codice ${esc(c.code)}</span><span class="chip soft">${t.done} sfide locali valutate</span><button class="chip linkchip" id="editProfile">Profilo del clan</button><button class="chip linkchip" data-spirit>Lo spirito del gioco</button></div>
   </section>
   ${progressCard()}
-  ${percorso()}
   <section class="trail" aria-label="Obiettivi dell'Agenda 2030">
     ${GOALS.map(G=>`<button class="tile ${G.dark?"dark-text":""} ${SDG_ICONE?"has-ico":""}" style="--c:${G.c}" data-goal="${G.n}" aria-label="Obiettivo ${G.n}: ${esc(G.t)}">
       ${SDG_ICONE?`<img class="ico" src="${esc(SDG_ICON(G.n))}" alt="" onerror="this.closest('.tile').classList.remove('has-ico');this.remove()">`:""}<span class="num">${G.n}</span><span class="ttl">${esc(G.t)}</span><span class="marks">${tileMarks(G.n)}</span></button>`).join("")}
@@ -767,7 +740,7 @@ function renderRules(){
     <div class="panel"><span class="big">${PTS_GLOBAL}</span><h3>Sfida globale</h3><p>Una domanda sul mondo. Un solo tentativo: risposta giusta, ${PTS_GLOBAL} punti; sbagliata, zero. Studiate e confrontatevi prima di confermare.</p></div>
     <div class="panel"><span class="big">${PTS_CAMPANA}</span><h3>Sfida campana</h3><p>Una domanda sulla Campania, con le fonti dove cercare la risposta. Leggetele prima di rispondere: avete un solo tentativo. Risposta giusta, ${PTS_CAMPANA} punti.</p></div>
     <div class="panel"><span class="big">${LOCAL_MAX}</span><h3>Sfida locale</h3><p>3 prove sul vostro territorio, dalla più semplice alla più impegnativa, ${LOCAL_MAX/3} punti ciascuna. Potete farle tutte o solo alcune, anche in momenti diversi. Inviate il materiale per email a ${esc(CONSEGNA.email||"gli organizzatori")}; la commissione vota prova per prova.</p></div>
-    <div class="panel"><span class="big">+${PTS_BONUS}</span><h3>Tappa completa</h3><p>Se su uno stesso obiettivo rispondete giusto alla domanda globale e ottenete punti nella sfida locale, ricevete un bonus di ${PTS_BONUS} punti.</p></div>
+    <div class="panel"><span class="big">+${PTS_BONUS}</span><h3>Sfida completa</h3><p>Portate a termine tutte e 3 le prove di una sfida locale: ricevete ${PTS_BONUS} punti in più. Tre prove sullo stesso obiettivo valgono più di tre prove sparse.</p></div>
   </div>
-  <section class="panel" style="margin-bottom:60px"><h3>Obiettivi di futuro</h3><p>Quando avete risposto a tutte le 17 domande globali e a tutte le 17 domande campane, e avete consegnato almeno ${SBLOCCO_LOCALI===1?"una sfida locale":SBLOCCO_LOCALI+" sfide locali"}, si sblocca la pagina <b>Obiettivi di futuro</b>: lì il clan sceglie i 3 obiettivi su cui vuole impegnarsi, e può cambiarli quando vuole. Le scelte di tutti i clan restano riservate fino alla fine della sfida. Poi la strada continua: ogni prova locale vi avvicina al traguardo.</p></section>`;
+  <section class="panel" style="margin-bottom:60px"><h3>Obiettivi di futuro</h3><p>Quando avete risposto a tutte le 17 domande globali e a tutte le 17 domande campane, e avete consegnato almeno ${SBLOCCO_LOCALI===1?"una sfida locale":SBLOCCO_LOCALI+" sfide locali"}, si sblocca la pagina <b>Obiettivi di futuro</b>: lì il clan sceglie i 3 obiettivi su cui vuole impegnarsi, e può cambiarli quando vuole. Le scelte di tutti i clan restano riservate fino alla fine della sfida. Intanto la strada continua: scegliete le sfide locali che vi accendono il cuore e portatele fino in fondo.</p></section>`;
 }

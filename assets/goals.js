@@ -26,7 +26,7 @@ const ZONE = ["Caserta","Faito","Felix","Hirpinia","Liternum","Napoli","Poseidon
 
 /* Punteggi (devono coincidere con la funzione classifica del database).
    Sfida locale: 3 prove da 10 punti, quindi al massimo 30. */
-const PTS_GLOBAL = 10, PTS_CAMPANA = 10, PTS_BONUS = 5, LOCAL_MAX = 30;
+const PTS_GLOBAL = 10, PTS_CAMPANA = 10, PTS_BONUS = 10, LOCAL_MAX = 30;
 
 /* Sblocco degli obiettivi di futuro: tutte le domande globali e campane
    risposte, e almeno questo numero di sfide locali consegnate. */

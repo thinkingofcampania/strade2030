@@ -190,3 +190,12 @@ Metti le 17 icone in `assets/img/sdg/` con i nomi `goal-1.png` ... `goal-17.png`
 - Risposte giuste e spiegazioni: tabella `campana_key` (colonna `correct`: 0 = prima opzione). L'ordine delle opzioni in `assets/goals.js` deve restare lo stesso.
 - Nei testi di `goals.js`: `*parola*` diventa corsivo; i link `https://...` diventano cliccabili.
 
+## Aggiornamento 8 · Comunicazione
+
+**Database:** esegui `supabase/aggiornamento-7.sql` (nuovo calcolo del bonus in classifica).
+
+- Schermata iniziale: "Diciassette obiettivi, diciassette tappe: guardare il mondo, conoscere la Campania, cambiare il vostro territorio."
+- Nuovo testo de "Lo spirito del gioco" (in `index.html`) e pulsante fisso "Perché giochiamo?" in basso a destra in tutte le pagine: il cuore batte finché non lo si apre.
+- Sulla mappa resta solo l'indicatore per sbloccare gli obiettivi di futuro (tolto il percorso con la coppa).
+- Bonus "Sfida completa": +10 punti per ogni sfida locale con tutte e 3 le prove valutate (sostituisce il vecchio +5).
+
