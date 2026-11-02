@@ -174,7 +174,7 @@ function renderAuth(){
     <p class="kicker">Thinking of Campania · Il domani è oggi</p>
     <h1>Strade 2030</h1>
     <p class="claim">Diciassette strade, un solo territorio.</p>
-    <p class="muted">Diciassette obiettivi, diciassette tappe: guardare il mondo, conoscere la Campania, cambiare il vostro territorio. <button class="linkbtn" type="button" data-spirit>Lo spirito del gioco</button></p>
+    <p class="muted">Ogni strada è un obiettivo dell’Agenda 2030: guarderete il mondo, conoscerete la Campania, lascierete il vostro territorio un pò migliore di come lo avete trovato. <button class="linkbtn" type="button" data-spirit>Lo spirito del gioco</button></p>
     <div class="seg" role="group">
       <button type="button" data-mode="register" aria-pressed="${m==="register"}">Registra il clan</button>
       <button type="button" data-mode="login" aria-pressed="${m!=="register"}">Siamo già registrati</button>
