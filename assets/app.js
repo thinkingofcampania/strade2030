@@ -352,26 +352,25 @@ function consegnaHtml(G){
   const c=S.clan, subject=mailSubject(G);
   const regole=`<ul class="deliver small">
       <li>Usate sempre l'oggetto qui sopra.</li>
-      <li>Nel testo della mail scrivete quali prove avete fatto (1, 2, 3) e cosa contiene ogni file.</li>
+      <li>Nel testo della mail scrivete il nome del clan, il codice (${esc(c.code)}), quali prove avete fatto (1, 2, 3) e cosa contiene ogni file.</li>
       <li>Potete mandare le prove tutte insieme o una alla volta, sempre con lo stesso oggetto.</li>
       <li>File oltre ${CONSEGNA.limiteMB} MB: non allegateli. Caricateli su Google Drive, WeTransfer o Dropbox e incollate il link nella mail, con accesso "chiunque abbia il link".</li>
       <li>Video: meglio compressi, oppure su YouTube come "non in elenco".</li></ul>`;
   if(!(CONSEGNA.modo==="email" && emailOk(CONSEGNA.email||""))){
     return `<div class="howto"><h4>Come consegnare</h4><p>Le istruzioni per inviare il materiale arriveranno a breve dagli organizzatori.</p></div>`;
   }
-  const body=`Clan: ${c.name}\nGruppo: ${c.grp||""}\nZona: ${c.zona}\nCodice: ${c.code}\nObiettivo ${G.n} - ${G.t} - Sfida locale\n\nProve inviate (1, 2, 3): \n\nContenuto dei file:\n- \n- \n`;
-  const mail=`mailto:${CONSEGNA.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   return `<div class="howto"><h4>Come consegnare</h4>
     <p><b>1. Raccogliete il materiale</b> delle prove che avete fatto.</p>
     <p><b>2. Inviatelo per email</b> a <b>${esc(CONSEGNA.email)}</b> con questo oggetto:</p>
     <p class="subject">${esc(subject)}</p>
-    <a class="btn small" href="${esc(mail)}">Scrivi la mail</a>${regole}
+    ${regole}
     <p><b>3. Avvisateci qui</b> premendo il pulsante qui sotto: così la commissione sa che c'è materiale da valutare.</p></div>`;
 }
 
 function openGoal(n){
   const G=goal(n), dlg=$("#goalDlg");
-  if(S.openGoal!==n){ pendingChoice=null; pendingCamp=null; }
+  const nuova = S.openGoal!==n;
+  if(nuova){ pendingChoice=null; pendingCamp=null; }
   S.openGoal=n; S.dirty=false;
   const a=S.answers[n], answered=!!a;
 
@@ -455,6 +454,7 @@ function openGoal(n){
       </section>
     </div>`;
   if(!dlg.open) dlg.showModal();
+  if(nuova){ dlg.scrollTop=0; const mb=dlg.querySelector(".m-body"); if(mb) mb.scrollTop=0; }
   $("#mClose").onclick=()=>dlg.close();
   dlg.querySelectorAll("[data-opt]").forEach(b=>b.addEventListener("click",()=>{ pendingChoice=+b.dataset.opt; openGoal(n); }));
   const ca2=$("#confirmAns"); if(ca2) ca2.onclick=()=>answerQuiz(n);
