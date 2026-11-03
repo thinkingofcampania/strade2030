@@ -143,6 +143,7 @@ function renderAuth(){
   const m = S.authMode;
   let form;
   if(m==="register") form = `
+      <div class="notice one-signup"><b>Una sola iscrizione per clan.</b> Registrate il clan una sola volta, da un solo membro, a nome di tutti: poi entrate tutti con lo stesso codice e la stessa password. Gli account doppi verranno rimossi.</div>
       <label class="f">Nome del clan<input type="text" id="rName" required maxlength="60" placeholder="Es. Clan Croce del Sud"></label>
       <label class="f">Gruppo scout<input type="text" id="rGroup" required maxlength="60" placeholder="Es. Santa Maria CV1"></label>
       <label class="f">Zona${zonaSelect("rZona")}</label>

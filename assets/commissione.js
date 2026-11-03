@@ -315,17 +315,23 @@ function renderClans(){
     .sort((a,b)=>(pts[b.id]?.totale||0)-(pts[a.id]?.totale||0) || a.name.localeCompare(b.name));
   const nSubs=id=>S.subs.filter(s=>s.clan_id===id).length;
   const nCamp=id=>S.camp.filter(s=>s.clan_id===id).length;
-  $("#app").innerHTML = `<section class="hero"><h1>Clan iscritti</h1><p>${Object.keys(S.clans).length} clan. Se un clan dimentica il codice lo trovi qui; per la password usa "Nuova password".</p>
+  // possibili doppioni: stesso nome nella stessa zona, oppure stessa email
+  const nk=c=>(c.zona||"")+"|"+norm(c.name), all=Object.values(S.clans);
+  const doppio=c=>all.some(x=>x.id!==c.id && (nk(x)===nk(c) || (c.email && x.email && x.email.toLowerCase()===c.email.toLowerCase())));
+  const nDoppi=all.filter(doppio).length;
+  $("#app").innerHTML = `<section class="hero"><h1>Clan iscritti</h1><p>${Object.keys(S.clans).length} clan. Se un clan dimentica il codice lo trovi qui; per la password usa "Nuova password". Se un clan si è iscritto più volte, tieni l'account con più risposte e premi "Elimina" sugli altri.</p>
+    ${nDoppi?`<p class="notice" style="margin-top:12px"><b>${nDoppi} account sembrano doppioni</b> (stesso nome nella stessa zona o stessa email): sono segnati nella tabella.</p>`:""}
     <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn" id="csv">Scarica classifica (CSV)</button><select id="zf" ${selStyle} aria-label="Filtra per zona">${zonaOpts()}</select></div></section>
    <div class="panel tablewrap" style="margin-bottom:60px">
     <table class="t"><thead><tr><th>Clan</th><th>Zona</th><th>Gruppo</th><th>Codice</th><th>Email</th><th>Campane</th><th>Locali</th><th>Galleria</th><th class="num">Totale</th><th></th></tr></thead>
-    <tbody>${rows.map(c=>{ const p=pts[c.id]||{}; return `<tr data-id="${esc(c.id)}"><td><b>${esc(c.name)}</b></td><td>${esc(c.zona)}</td><td>${esc(c.grp||"")}</td><td>${esc(c.code)}</td><td>${c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:""}</td><td>${nCamp(c.id)}/17</td><td>${nSubs(c.id)}</td><td>${galleryCell(c)}</td>
-      <td class="num"><b>${p.totale??0}</b></td><td><button class="btn ghost small" data-pw>Nuova password</button></td></tr>
+    <tbody>${rows.map(c=>{ const p=pts[c.id]||{}; return `<tr data-id="${esc(c.id)}"><td><b>${esc(c.name)}</b>${doppio(c)?` <span class="status wait">possibile doppione</span>`:""}</td><td>${esc(c.zona)}</td><td>${esc(c.grp||"")}</td><td>${esc(c.code)}</td><td>${c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:""}</td><td>${nCamp(c.id)}/17</td><td>${nSubs(c.id)}</td><td>${galleryCell(c)}</td>
+      <td class="num"><b>${p.totale??0}</b></td><td class="row-btns"><button class="btn ghost small" data-pw>Nuova password</button> <button class="btn ghost small danger" data-del>Elimina</button></td></tr>
       <tr class="cred-row hidden" data-out-for="${esc(c.id)}"><td colspan="10"></td></tr>`; }).join("")}</tbody></table>
    </div>`;
   $("#csv").onclick=()=>downloadCsv(rows,pts);
   $("#zf").onchange=e=>{ S.zonaFilter=e.target.value; renderClans(); };
   document.querySelectorAll("[data-hide]").forEach(b=>b.onclick=()=>toggleGallery(b));
+  document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>eliminaClan(b));
   document.querySelectorAll("[data-pw]").forEach(b=>b.onclick=async()=>{
     const id=b.closest("tr").dataset.id, c=S.clans[id];
     if(!confirm(`Generare una nuova password per ${c.name}? Quella attuale smetterà di funzionare.`)) return;
@@ -395,4 +401,19 @@ function renderFuturo(){
     const blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"});
     const u=URL.createObjectURL(blob), l=document.createElement("a"); l.href=u; l.download="obiettivi-di-futuro.csv"; l.click(); URL.revokeObjectURL(u);
   };
+}
+
+/* ---------- Eliminare un clan (per esempio un account doppio) ---------- */
+async function eliminaClan(b){
+  const id=b.closest("tr").dataset.id, c=S.clans[id];
+  const risposte=S.camp.filter(s=>s.clan_id===id).length, consegne=S.subs.filter(s=>s.clan_id===id).length;
+  if(!confirm(`Eliminare definitivamente "${c.name}" (zona ${c.zona}, codice ${c.code})?\n\nSi cancellano anche le sue risposte (${risposte} campane), le sfide locali consegnate (${consegne}), le valutazioni, gli obiettivi di futuro e la foto. Non si può annullare.`)) return;
+  const conferma=prompt(`Per confermare scrivi il codice del clan: ${c.code}`);
+  if((conferma||"").trim().toUpperCase()!==c.code.toUpperCase()) return toast("Eliminazione annullata: il codice non corrisponde.");
+  b.disabled=true;
+  if(c.photo){ try{ await sb.storage.from("clan").remove([c.photo]); }catch(e){} }
+  const { error } = await sb.rpc("elimina_clan",{ p_clan:id });
+  if(error){ b.disabled=false; console.error(error); return toast("Clan non eliminato. Hai eseguito l'aggiornamento 8 del database?"); }
+  toast(`${c.name} eliminato`);
+  await loadAll();
 }

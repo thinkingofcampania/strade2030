@@ -514,3 +514,7 @@ label.f{font-weight:600}
 @media (max-width:600px){.spirit-fab{right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));padding:8px 14px 8px 8px}.spirit-fab small{display:none}.spirit-fab b{font-size:15px}}
 main,#app{padding-bottom:70px}
 .spirit .spirit-lead{color:var(--kerchief)}
+.one-signup{margin:0 0 4px;font-size:15px;line-height:1.45}
+.btn.danger{color:var(--kerchief);border-color:color-mix(in srgb,var(--kerchief) 50%,var(--line))}
+.btn.danger:hover{background:var(--kerchief);color:var(--on-red)}
+.row-btns .btn{display:block;width:100%;margin:3px 0}
