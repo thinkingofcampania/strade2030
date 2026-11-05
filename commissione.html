@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css?v=25">
+<link rel="stylesheet" href="assets/style.css?v=26">
 </head>
 <body>
 <header class="top">
@@ -22,16 +22,28 @@
       <button role="tab" data-view="clans" aria-selected="false">Comunità R/S</button>
     </nav>
     <button class="btn ghost small hidden" id="refresh">Aggiorna</button>
+    <button class="btn ghost small hidden" id="pwBtn">Cambia password</button>
     <button class="btn ghost small hidden" id="logout">Esci</button>
   </div>
 </header>
 <main class="wrap" id="app"><p class="muted" style="padding:60px 0">Caricamento…</p></main>
+<dialog id="pwDlg" class="spirit" aria-labelledby="pwTitle">
+  <form class="spirit-body stack" id="pwForm" method="dialog">
+    <p class="kicker">Commissione</p>
+    <h2 id="pwTitle">Cambia password</h2>
+    <p class="muted small">Vale solo per il tuo account. Almeno 8 caratteri, meglio se lunga e diversa da quelle che usi altrove.</p>
+    <label class="f">Nuova password<input type="password" id="pwNew" minlength="8" required autocomplete="new-password"></label>
+    <label class="f">Ripeti la nuova password<input type="password" id="pwNew2" minlength="8" required autocomplete="new-password"></label>
+    <p class="error hidden" id="pwErr" role="alert"></p>
+    <div class="row-actions"><button class="btn" id="pwSave" type="submit">Salva la nuova password</button><button class="btn ghost" type="button" id="pwCancel">Annulla</button></div>
+  </form>
+</dialog>
 <div class="toast hidden" id="toast" role="status"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js"></script>
-<script src="config.js?v=25"></script>
-<script src="assets/goals.js?v=25"></script>
-<script src="assets/common.js?v=25"></script>
-<script src="assets/commissione.js?v=25"></script>
+<script src="config.js?v=26"></script>
+<script src="assets/goals.js?v=26"></script>
+<script src="assets/common.js?v=26"></script>
+<script src="assets/commissione.js?v=26"></script>
 </body>
 </html>

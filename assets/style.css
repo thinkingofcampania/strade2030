@@ -554,3 +554,4 @@ fieldset{min-width:0}
 @keyframes fab-ring{0%{transform:scale(1);opacity:.75}100%{transform:scale(1.35,1.7);opacity:0}}
 @keyframes fab-nudge{0%,62%,100%{transform:translate(0,0) rotate(0)}66%{transform:translateY(-10px) rotate(-4deg)}70%{transform:translateY(0) rotate(4deg)}74%{transform:translateY(-6px) rotate(-3deg)}78%{transform:translateY(0) rotate(2deg)}82%{transform:rotate(0)}}
 @media (prefers-reduced-motion:reduce){.spirit-fab:not(.seen),.spirit-fab:not(.seen)::before,.spirit-fab:not(.seen)::after{animation:none}}
+#pwErr{color:var(--kerchief);font-weight:600;margin:0}

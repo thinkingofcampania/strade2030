@@ -36,7 +36,7 @@ function renderLogin(msg){
 async function enter(){
   const { data:isAdm } = await sb.rpc("is_admin");
   if(!isAdm){ await sb.auth.signOut(); return renderLogin("Questo account non fa parte della commissione."); }
-  ["#tabs","#refresh","#logout"].forEach(s=>$(s).classList.remove("hidden"));
+  ["#tabs","#refresh","#pwBtn","#logout"].forEach(s=>$(s).classList.remove("hidden"));
   await loadAll();
 }
 
@@ -68,6 +68,22 @@ async function loadAll(){
 
 $("#refresh").onclick=()=>loadAll().then(()=>toast("Dati aggiornati"));
 $("#logout").onclick=async()=>{ await sb.auth.signOut(); location.reload(); };
+
+/* ---------- Cambia password (account della commissione) ---------- */
+$("#pwBtn").onclick=()=>{ $("#pwForm").reset(); $("#pwErr").classList.add("hidden"); $("#pwDlg").showModal(); $("#pwNew").focus(); };
+$("#pwCancel").onclick=()=>$("#pwDlg").close();
+$("#pwForm").onsubmit=async e=>{
+  e.preventDefault();
+  const a=$("#pwNew").value, b=$("#pwNew2").value, err=$("#pwErr");
+  const show=t=>{ err.textContent=t; err.classList.remove("hidden"); };
+  if(a.length<8) return show("La password deve avere almeno 8 caratteri.");
+  if(a!==b) return show("Le due password non coincidono.");
+  const btn=$("#pwSave"); btn.disabled=true;
+  const { error } = await sb.auth.updateUser({ password:a });
+  btn.disabled=false;
+  if(error){ console.error(error); return show(/same|different/i.test(error.message) ? "È uguale a quella attuale: scegline una diversa." : "Password non cambiata. Riprova tra poco."); }
+  $("#pwDlg").close(); toast("Password cambiata. Dalla prossima volta entra con quella nuova.");
+};
 document.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>{ S.view=b.dataset.view; S.filter="pending"; render(); window.scrollTo({top:0}); });
 
 function render(){
