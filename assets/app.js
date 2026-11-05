@@ -360,8 +360,8 @@ function consegnaHtml(G){
       <li>Usate sempre l'oggetto qui sopra.</li>
       <li>Nel testo della mail scrivete il nome della Comunità R/S, il codice (${esc(c.code)}), quali prove avete fatto (1, 2, 3) e cosa contiene ogni file.</li>
       <li>Potete mandare le prove tutte insieme o una alla volta, sempre con lo stesso oggetto.</li>
-      <li>File oltre ${CONSEGNA.limiteMB} MB: non allegateli. Caricateli su Google Drive, WeTransfer o Dropbox e incollate il link nella mail, con accesso "chiunque abbia il link".</li>
-      <li>Video: meglio compressi, oppure su YouTube come "non in elenco".</li></ul>`;
+      <li><b>File e video pesanti</b> (oltre ${CONSEGNA.limiteMB} MB): non allegateli. Caricateli su <a href="https://wetransfer.com/" target="_blank" rel="noopener noreferrer">WeTransfer</a>, scegliete "Ottieni un link" e incollate il link nella mail.</li>
+      <li>Il link di WeTransfer scade dopo pochi giorni: mandate la mail subito dopo averlo creato.</li></ul>`;
   if(!(CONSEGNA.modo==="email" && emailOk(CONSEGNA.email||""))){
     return `<div class="howto"><h4>Come consegnare</h4><p>Le istruzioni per inviare il materiale arriveranno a breve dagli organizzatori.</p></div>`;
   }
@@ -750,7 +750,7 @@ function renderRules(){
   <div class="rules rules4">
     <div class="panel"><span class="big">${PTS_GLOBAL}</span><h3>Sfida globale</h3>${li(["Una domanda sul mondo.","<b>Un solo tentativo.</b>",`Giusta: <b>${PTS_GLOBAL} punti</b>. Sbagliata: 0.`,"Confrontatevi prima di confermare."])}</div>
     <div class="panel"><span class="big">${PTS_CAMPANA}</span><h3>Sfida campana</h3>${li(["Una domanda sulla Campania.","Sotto trovate le fonti: <b>leggetele prima</b>.","<b>Un solo tentativo.</b>",`Giusta: <b>${PTS_CAMPANA} punti</b>.`])}</div>
-    <div class="panel"><span class="big">${LOCAL_MAX}</span><h3>Sfida locale</h3>${li(["<b>3 prove</b> sul vostro territorio, dalla più facile alla più impegnativa.",`<b>${LOCAL_MAX/3} punti</b> per ogni prova.`,"Tutte o solo alcune, anche in momenti diversi.",`Materiale via email a <b>${esc(CONSEGNA.email||"gli organizzatori")}</b>.`])}</div>
+    <div class="panel"><span class="big">${LOCAL_MAX}</span><h3>Sfida locale</h3>${li(["<b>3 prove</b> sul vostro territorio, dalla più facile alla più impegnativa.",`<b>${LOCAL_MAX/3} punti</b> per ogni prova.`,"Tutte o solo alcune, anche in momenti diversi.",`Materiale via email a <b>${esc(CONSEGNA.email||"gli organizzatori")}</b>.`,`File e video pesanti con un link <a href="https://wetransfer.com/" target="_blank" rel="noopener noreferrer">WeTransfer</a>.`])}</div>
     <div class="panel"><span class="big">+${PTS_BONUS}</span><h3>Sfida completa</h3>${li(["Fate <b>tutte e 3 le prove</b> di una sfida locale.",`Ricevete <b>${PTS_BONUS} punti</b> in più.`,"3 prove sullo stesso obiettivo valgono più di 3 prove sparse."])}</div>
   </div>
   <section class="panel rules-futuro">
