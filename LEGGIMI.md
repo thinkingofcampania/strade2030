@@ -208,3 +208,10 @@ Metti le 17 icone in `assets/img/sdg/` con i nomi `goal-1.png` ... `goal-17.png`
 - Ovunque compare il nome completo, per esempio "Clan Croce del Sud e Noviziato Stella Polare".
 - Nel codice e nel database le tabelle si chiamano ancora `clans` (non va cambiato).
 
+## Aggiornamento 10 · Leggibilità
+
+- Regole: testi a elenco puntato, i 4 riquadri in fila e "Obiettivi di futuro" subito sotto.
+- Mappa: nel riquadro di sblocco sono evidenziate le condizioni (tutte le domande globali, tutte le campane, almeno 1 sfida locale).
+- Registrazione e profilo: "Clan" e "Noviziato" li aggiunge il sito, i ragazzi scrivono solo il nome.
+- Pulsante "Perché giochiamo?": si muove e lampeggia finché la Comunità R/S non lo apre (il browser se lo ricorda).
+

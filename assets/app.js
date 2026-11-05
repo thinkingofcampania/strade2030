@@ -107,10 +107,12 @@ $("#logout").onclick = async ()=>{
 };
 
 /* ---------- Lo spirito del gioco ---------- */
-function openSpirit(){ const d=$("#spiritDlg"); if(!d.open) d.showModal(); const f=$("#spiritFab"); if(f) f.classList.add("seen"); }
+function openSpirit(){ const d=$("#spiritDlg"); if(!d.open) d.showModal(); }
+function spiritLetto(){ const f=$("#spiritFab"); if(f) f.classList.add("seen"); try{ localStorage.setItem("strade2030-spirito-letto","1"); }catch(e){} }
+try{ if(localStorage.getItem("strade2030-spirito-letto")) $("#spiritFab")?.classList.add("seen"); }catch(e){}
 $("#spiritOk").onclick=()=>{ try{ localStorage.setItem("strade2030-spirito","1"); }catch(e){} $("#spiritDlg").close(); };
 $("#spiritDlg").addEventListener("cancel",()=>{ try{ localStorage.setItem("strade2030-spirito","1"); }catch(e){} });
-document.addEventListener("click", e=>{ if(e.target.closest("[data-spirit]")) openSpirit(); });
+document.addEventListener("click", e=>{ if(e.target.closest("[data-spirit]")){ openSpirit(); spiritLetto(); } });
 
 /* ---------- Icone SDG (con ripiego sul riquadro colorato) ---------- */
 // Riquadri colorati con numero e nome (le icone ufficiali sono solo sulla mappa)
@@ -144,8 +146,8 @@ function renderAuth(){
   let form;
   if(m==="register") form = `
       <div class="notice one-signup"><b>Una sola iscrizione per Comunità R/S.</b> Registrate la Comunità R/S (clan e noviziato insieme) una sola volta, da un solo membro, a nome di tutti: poi entrate tutti con lo stesso codice e la stessa password. Gli account doppi verranno rimossi.</div>
-      <label class="f">Nome del clan<input type="text" id="rName" required maxlength="60" placeholder="Es. Clan Croce del Sud"></label>
-      <label class="f">Nome del noviziato <span class="h">Facoltativo. Se clan e noviziato hanno un nome solo, lasciate vuoto.</span><input type="text" id="rNov" maxlength="60" placeholder="Es. Noviziato Stella Polare"></label>
+      <label class="f">Nome del clan <span class="h">Scrivete solo il nome: «Clan» lo aggiunge il sito.</span><span class="prefix-in"><span>Clan</span><input type="text" id="rName" required maxlength="50" placeholder="Croce del Sud"></span></label>
+      <label class="f">Nome del noviziato <span class="h">Facoltativo. Solo il nome; se clan e noviziato hanno un nome solo, lasciate vuoto.</span><span class="prefix-in"><span>Noviziato</span><input type="text" id="rNov" maxlength="50" placeholder="Stella Polare"></span></label>
       <label class="f">Gruppo scout<input type="text" id="rGroup" required maxlength="60" placeholder="Es. Santa Maria CV1"></label>
       <label class="f">Zona${zonaSelect("rZona")}</label>
       <label class="f">Email di riferimento della Comunità R/S <span class="h">Serve solo per recuperare codice o password. Non compare sul sito. Va bene quella della Comunità R/S o di un capo.</span><input type="email" id="rEmail" required maxlength="120" autocomplete="email" placeholder="nome@esempio.it"></label>
@@ -202,7 +204,8 @@ const codeToEmail = code => code.trim().toLowerCase().replace(/\s+/g,"") + "@" +
 const emailOk = v => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
 
 async function doRegister(btn){
-  const name=$("#rName").value.trim(), noviziato=$("#rNov").value.trim()||null, grp=$("#rGroup").value.trim(), zona=$("#rZona").value, email=$("#rEmail").value.trim();
+  const name=nomeClan($("#rName").value), noviziato=nomeNov($("#rNov").value), grp=$("#rGroup").value.trim(), zona=$("#rZona").value, email=$("#rEmail").value.trim();
+  if(!soloNome($("#rName").value,"clan")) return authError("Scrivete il nome del clan.");
   const pw=$("#rPw").value, pw2=$("#rPw2").value;
   if(!ZONE.includes(zona)) return authError("Scegliete la zona dal menu.");
   if(!emailOk(email)) return authError("Controllate l'email di riferimento.");
@@ -283,8 +286,8 @@ function renderComplete(){
   <div class="reg"><h1>Completate la registrazione</h1>
    <form id="compForm" class="panel stack" style="margin-top:20px">
     <p style="margin:0">Codice Comunità R/S: <b>${esc(code)}</b></p>
-    <label class="f">Nome del clan<input type="text" id="cName" required maxlength="60" placeholder="Es. Clan Croce del Sud"></label>
-    <label class="f">Nome del noviziato <span class="h">Facoltativo</span><input type="text" id="cNov" maxlength="60" placeholder="Es. Noviziato Stella Polare"></label>
+    <label class="f">Nome del clan <span class="h">Solo il nome</span><span class="prefix-in"><span>Clan</span><input type="text" id="cName" required maxlength="50" placeholder="Croce del Sud"></span></label>
+    <label class="f">Nome del noviziato <span class="h">Facoltativo, solo il nome</span><span class="prefix-in"><span>Noviziato</span><input type="text" id="cNov" maxlength="50" placeholder="Stella Polare"></span></label>
     <label class="f">Gruppo scout<input type="text" id="cGroup" required maxlength="60"></label>
     <label class="f">Zona${zonaSelect("cZona")}</label>
     <label class="f">Email di riferimento della Comunità R/S<input type="email" id="cEmail" required maxlength="120"></label>
@@ -295,7 +298,7 @@ function renderComplete(){
     const zona=$("#cZona").value, email=$("#cEmail").value.trim();
     if(!ZONE.includes(zona)) return authError("Scegliete la zona dal menu.");
     if(!emailOk(email)) return authError("Controllate l'email.");
-    const { error } = await sb.from("clans").insert({ id:uid(), name:$("#cName").value.trim(), noviziato:$("#cNov").value.trim()||null, grp:$("#cGroup").value.trim(), zona, email, code });
+    const { error } = await sb.from("clans").insert({ id:uid(), name:nomeClan($("#cName").value), noviziato:nomeNov($("#cNov").value), grp:$("#cGroup").value.trim(), zona, email, code });
     if(error) return authError("Salvataggio non riuscito, riprovate.");
     await loadAll();
   });
@@ -317,7 +320,7 @@ function progressCard(){
   const bar=(v,max,label)=>`<div class="pbar"><span>${label}</span><b>${Math.min(v,max)}/${max}</b><i style="--w:${Math.min(100,v/max*100)}%"></i></div>`;
   return `<section class="unlock ${p.sbloccato?"is-open":""}">
     <div><h2>${p.sbloccato?"Obiettivi di futuro sbloccati":"Sbloccate gli obiettivi di futuro"}</h2>
-    <p>${p.sbloccato?"Avete guardato tutti i 17 obiettivi. Ora scegliete i 3 su cui la vostra Comunità R/S vuole impegnarsi.":"Rispondete a tutte le domande globali e campane e consegnate almeno una sfida locale: così avrete guardato da vicino tutta l'Agenda 2030."}</p></div>
+    <p>${p.sbloccato?"Avete guardato tutti i 17 obiettivi. Ora scegliete i 3 che, secondo voi, sono i più importanti per il vostro territorio.":`Per sbloccarli: <strong class="hl">tutte le domande globali</strong>, <strong class="hl">tutte le domande campane</strong> e <strong class="hl">almeno 1 sfida locale</strong> consegnata. Così avrete guardato da vicino tutta l'Agenda 2030.`}</p></div>
     ${p.sbloccato?`<button class="btn" data-tab="future">Scegliete i vostri 3 obiettivi</button>`:
       `<div class="pbars">${bar(p.globali,17,"Domande globali")}${bar(p.campane,17,"Domande campane")}${bar(p.locali,SBLOCCO_LOCALI,"Sfide locali consegnate")}</div>`}
   </section>`;
@@ -570,7 +573,7 @@ function openProfile(){
     <div class="m-body">
       <form id="profForm" class="stack" style="padding-top:18px">
         <h3>Nome della Comunità R/S</h3>
-        <label class="f">Nome del noviziato <span class="h">Facoltativo. Compare accanto al nome del clan, es. "${esc(c.name)} e Noviziato Stella Polare".</span><input type="text" id="pNov" maxlength="60" value="${esc(c.noviziato||"")}" placeholder="Es. Noviziato Stella Polare"></label>
+        <label class="f">Nome del noviziato <span class="h">Facoltativo, solo il nome. Compare accanto al clan: «${esc(c.name)} e Noviziato …».</span><span class="prefix-in"><span>Noviziato</span><input type="text" id="pNov" maxlength="50" value="${esc(soloNome(c.noviziato||"","noviziato"))}" placeholder="Stella Polare"></span></label>
         <h3>Foto e membri <span class="pts">pagina "Comunità R/S"</span></h3>
         ${c.photo?`<img class="prof-photo" src="${esc(clanPhotoUrl(c.photo))}" alt="Foto di ${esc(nomeCom(c))}">`:""}
         ${profileFields(c)}
@@ -597,7 +600,7 @@ function openProfile(){
     if(!emailOk(email)) return fail("Controllate l'email di riferimento.");
     btn.disabled=true; btn.textContent="Salvataggio…";
     try{
-      const upd={ members: prof.members, email, noviziato: $("#pNov").value.trim()||null };
+      const upd={ members: prof.members, email, noviziato: nomeNov($("#pNov").value) };
       if(prof.file){ btn.textContent="Carico la foto…"; upd.photo=await uploadClanPhoto(prof.file); }
       const { error } = await sb.from("clans").update(upd).eq("id",uid());
       if(error) throw error;
@@ -740,12 +743,21 @@ function nextLevels(){
 
 /* ---------- Regole ---------- */
 function renderRules(){
-  $("#app").innerHTML = `<section class="hero"><p class="kicker">Strade 2030 · Thinking of Campania</p><h1>Come funziona</h1><p>Ogni obiettivo è una tappa con tre sfide. Potete affrontarle nell'ordine che volete e in quanto tempo volete. <button class="linkbtn" type="button" data-spirit>Lo spirito del gioco</button></p></section>
-  <div class="rules" style="padding-bottom:24px">
-    <div class="panel"><span class="big">${PTS_GLOBAL}</span><h3>Sfida globale</h3><p>Una domanda sul mondo. Un solo tentativo: risposta giusta, ${PTS_GLOBAL} punti; sbagliata, zero. Studiate e confrontatevi prima di confermare.</p></div>
-    <div class="panel"><span class="big">${PTS_CAMPANA}</span><h3>Sfida campana</h3><p>Una domanda sulla Campania, con le fonti dove cercare la risposta. Leggetele prima di rispondere: avete un solo tentativo. Risposta giusta, ${PTS_CAMPANA} punti.</p></div>
-    <div class="panel"><span class="big">${LOCAL_MAX}</span><h3>Sfida locale</h3><p>3 prove sul vostro territorio, dalla più semplice alla più impegnativa, ${LOCAL_MAX/3} punti ciascuna. Potete farle tutte o solo alcune, anche in momenti diversi. Inviate il materiale per email a ${esc(CONSEGNA.email||"gli organizzatori")}; la commissione vota prova per prova.</p></div>
-    <div class="panel"><span class="big">+${PTS_BONUS}</span><h3>Sfida completa</h3><p>Portate a termine tutte e 3 le prove di una sfida locale: ricevete ${PTS_BONUS} punti in più. Tre prove sullo stesso obiettivo valgono più di tre prove sparse.</p></div>
+  const li = arr => `<ul class="rl">${arr.map(x=>`<li>${x}</li>`).join("")}</ul>`;
+  $("#app").innerHTML = `<section class="hero"><p class="kicker">Strade 2030 · Thinking of Campania</p><h1>Come funziona</h1>
+    ${li(["Ogni obiettivo dell'Agenda 2030 contiene tre sfide.","Potete affrontarle nell'ordine che volete e in quanto tempo volete."])}
+    <p><button class="linkbtn" type="button" data-spirit>Lo spirito del gioco</button></p></section>
+  <div class="rules rules4">
+    <div class="panel"><span class="big">${PTS_GLOBAL}</span><h3>Sfida globale</h3>${li(["Una domanda sul mondo.","<b>Un solo tentativo.</b>",`Giusta: <b>${PTS_GLOBAL} punti</b>. Sbagliata: 0.`,"Confrontatevi prima di confermare."])}</div>
+    <div class="panel"><span class="big">${PTS_CAMPANA}</span><h3>Sfida campana</h3>${li(["Una domanda sulla Campania.","Sotto trovate le fonti: <b>leggetele prima</b>.","<b>Un solo tentativo.</b>",`Giusta: <b>${PTS_CAMPANA} punti</b>.`])}</div>
+    <div class="panel"><span class="big">${LOCAL_MAX}</span><h3>Sfida locale</h3>${li(["<b>3 prove</b> sul vostro territorio, dalla più facile alla più impegnativa.",`<b>${LOCAL_MAX/3} punti</b> per ogni prova.`,"Tutte o solo alcune, anche in momenti diversi.",`Materiale via email a <b>${esc(CONSEGNA.email||"gli organizzatori")}</b>.`])}</div>
+    <div class="panel"><span class="big">+${PTS_BONUS}</span><h3>Sfida completa</h3>${li(["Fate <b>tutte e 3 le prove</b> di una sfida locale.",`Ricevete <b>${PTS_BONUS} punti</b> in più.`,"3 prove sullo stesso obiettivo valgono più di 3 prove sparse."])}</div>
   </div>
-  <section class="panel" style="margin-bottom:60px"><h3>Obiettivi di futuro</h3><p>Quando avete risposto a tutte le 17 domande globali e a tutte le 17 domande campane, e avete consegnato almeno ${SBLOCCO_LOCALI===1?"una sfida locale":SBLOCCO_LOCALI+" sfide locali"}, si sblocca la pagina <b>Obiettivi di futuro</b>: lì la Comunità R/S sceglie i 3 obiettivi su cui vuole impegnarsi, e può cambiarli quando vuole. Le scelte di tutte le Comunità R/S restano riservate fino alla fine della sfida. Intanto la strada continua: scegliete le sfide locali che vi accendono il cuore e portatele fino in fondo.</p></section>`;
+  <section class="panel rules-futuro">
+    <h3>Obiettivi di futuro</h3>
+    <div class="rf-cols">
+      <div><h4>Si sbloccano quando avete</h4>${li(["risposto a <b>tutte le 17 domande globali</b>;","risposto a <b>tutte le 17 domande campane</b>;",`consegnato <b>almeno ${SBLOCCO_LOCALI} ${SBLOCCO_LOCALI===1?"sfida locale":"sfide locali"}</b>.`])}</div>
+      <div><h4>Poi</h4>${li(["scegliete i <b>3 obiettivi</b> più importanti per il vostro territorio;","potete cambiarli quando volete;","le scelte restano riservate fino alla fine della sfida."])}</div>
+    </div>
+  </section>`;
 }

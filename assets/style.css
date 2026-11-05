@@ -523,3 +523,34 @@ main,#app{padding-bottom:70px}
 fieldset{min-width:0}
 .profile-box,.profile-box *{min-width:0;max-width:100%;box-sizing:border-box}
 @media (max-width:380px){ nav.tabs button{font-size:12.5px;padding:7px 2px} }
+
+/* ---------- Nome con prefisso fisso (Clan / Noviziato) ---------- */
+.prefix-in{display:flex;align-items:stretch;margin-top:6px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper-2)}
+.prefix-in>span{display:flex;align-items:center;padding:0 12px;font-weight:700;background:var(--paper);border-right:1px solid var(--line);color:var(--ink)}
+.prefix-in input{border:0!important;margin:0!important;border-radius:0!important;flex:1;min-width:0;background:transparent}
+.prefix-in:focus-within{outline:2px solid var(--kerchief);outline-offset:1px}
+
+/* ---------- Testo in evidenza nel riquadro di sblocco ---------- */
+.unlock strong.hl{font-weight:700;color:var(--ink);background:color-mix(in srgb,var(--kerchief) 14%,transparent);padding:0 2px;border-radius:4px}
+
+/* ---------- Regole: elenchi brevi, 4 riquadri in fila, futuro subito sotto ---------- */
+.rl{margin:8px 0 0;padding:0;list-style:none}
+.rl li{position:relative;padding-left:20px;margin:6px 0;line-height:1.4}
+.rl li::before{content:"";position:absolute;left:3px;top:.55em;width:8px;height:8px;border-radius:50%;background:var(--kerchief)}
+.hero .rl{font-size:18px;max-width:60ch}
+.rules4{grid-template-columns:repeat(4,minmax(0,1fr));padding-bottom:16px}
+.rules4 .panel{padding:18px}
+.rules-futuro{margin-bottom:60px}
+.rules-futuro h3{font-size:22px}
+.rf-cols{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.rf-cols h4{margin:8px 0 0;font-size:15px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft)}
+@media (max-width:1000px){.rules4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:600px){.rules4{grid-template-columns:minmax(0,1fr)}.rf-cols{grid-template-columns:1fr;gap:4px}.hero .rl{font-size:16.5px}}
+
+/* ---------- Pulsante "Perché giochiamo?": più insistente finché non lo aprono ---------- */
+.spirit-fab:not(.seen){animation:fab-nudge 3.2s ease-in-out infinite}
+.spirit-fab:not(.seen)::before,.spirit-fab:not(.seen)::after{content:"";position:absolute;inset:0;border-radius:999px;border:3px solid var(--kerchief);animation:fab-ring 1.6s ease-out infinite;pointer-events:none}
+.spirit-fab:not(.seen)::after{animation-delay:.8s}
+@keyframes fab-ring{0%{transform:scale(1);opacity:.75}100%{transform:scale(1.35,1.7);opacity:0}}
+@keyframes fab-nudge{0%,62%,100%{transform:translate(0,0) rotate(0)}66%{transform:translateY(-10px) rotate(-4deg)}70%{transform:translateY(0) rotate(4deg)}74%{transform:translateY(-6px) rotate(-3deg)}78%{transform:translateY(0) rotate(2deg)}82%{transform:rotate(0)}}
+@media (prefers-reduced-motion:reduce){.spirit-fab:not(.seen),.spirit-fab:not(.seen)::before,.spirit-fab:not(.seen)::after{animation:none}}

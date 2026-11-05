@@ -2,6 +2,10 @@
 const CLAN_DOMAIN = "clan.strade2030.it"; // dominio fittizio: serve solo a trasformare il codice clan in un login
 const $ = (s, r = document) => r.querySelector(s);
 /* Nome completo della Comunità R/S: "Clan Croce del Sud e Noviziato Stella Polare" */
+/* Nomi scritti dai ragazzi: tolgono "Clan"/"Noviziato" se l'hanno scritto loro, poi il sito lo aggiunge sempre uguale */
+const soloNome = (v, parola) => String(v||"").trim().replace(new RegExp("^"+parola+"\\s+","i"),"").trim();
+const nomeClan = v => { const n=soloNome(v,"clan"); return n ? "Clan "+n : ""; };
+const nomeNov  = v => { const n=soloNome(v,"noviziato"); return n ? "Noviziato "+n : null; };
 const nomeCom = c => c ? (c.name || "") + (c.noviziato ? " e " + c.noviziato : "") : "";
 const esc = v => String(v ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 /* Testo con un minimo di formattazione: *parola* = corsivo, link https:// cliccabili. */
