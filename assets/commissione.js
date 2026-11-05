@@ -54,7 +54,7 @@ async function loadAll(){
   ]);
   const bad=r.find(x=>x.error); if(bad){ console.error(bad.error); toast("Errore nel caricamento. Hai eseguito l'aggiornamento del database?"); }
   const [c,s,e,ca,ce,ck,rq,b,sc]=r;
-  S.clans=Object.fromEntries((c.data||[]).map(x=>[x.id,x]));
+  S.clans=Object.fromEntries((c.data||[]).map(x=>[x.id,{...x, name:nomeCom(x)}]));   // nome completo: clan e noviziato
   S.subs=s.data||[];
   S.evals=Object.fromEntries((e.data||[]).map(x=>[key(x.clan_id,x.goal),x]));
   S.camp=ca.data||[];
@@ -110,9 +110,9 @@ function renderLocal(){
   const list=S.filter==="pending"?pend:S.filter==="done"?done:all;
   const goalSel=`<select id="gf" ${selStyle} aria-label="Filtra per obiettivo"><option value="0">Tutti gli obiettivi</option>${GOALS.map(G=>`<option value="${G.n}" ${S.goalFilter===G.n?"selected":""}>${G.n}. ${esc(G.t)}</option>`).join("")}</select>`;
   const clanOpts=Object.values(S.clans).sort((a,b)=>a.zona.localeCompare(b.zona)||a.name.localeCompare(b.name)).map(c=>`<option value="${esc(c.id)}">${esc(c.zona)} · ${esc(c.name)}</option>`).join("");
-  $("#app").innerHTML = `<section class="hero"><h1>Sfide locali</h1><p>I clan mandano il materiale a ${esc(CONSEGNA.email||"l'email del progetto")}, con l'oggetto della sfida, e premono "Abbiamo inviato la mail". Ogni sfida ha ${goal(1).parts.length} prove da 0 a ${goal(1).parts[0].p} punti: lascia vuote quelle non consegnate. Il totale (massimo ${LOCAL_MAX}) e la classifica si calcolano da soli. Se un clan manda altre prove dopo la valutazione, la sfida torna tra quelle da valutare.</p></section>
-   <details class="panel add-sub"><summary><b>Il clan ha mandato la mail ma non compare qui?</b> Registra tu la consegna</summary>
-     <div class="row-actions"><select id="asClan" ${selStyle} style="width:auto;max-width:100%"><option value="">Clan…</option>${clanOpts}</select>
+  $("#app").innerHTML = `<section class="hero"><h1>Sfide locali</h1><p>Le Comunità R/S mandano il materiale a ${esc(CONSEGNA.email||"l'email del progetto")}, con l'oggetto della sfida, e premono "Abbiamo inviato la mail". Ogni sfida ha ${goal(1).parts.length} prove da 0 a ${goal(1).parts[0].p} punti: lascia vuote quelle non consegnate. Il totale (massimo ${LOCAL_MAX}) e la classifica si calcolano da soli. Se una Comunità R/S manda altre prove dopo la valutazione, la sfida torna tra quelle da valutare.</p></section>
+   <details class="panel add-sub"><summary><b>La Comunità R/S ha mandato la mail ma non compare qui?</b> Registra tu la consegna</summary>
+     <div class="row-actions"><select id="asClan" ${selStyle} style="width:auto;max-width:100%"><option value="">Comunità R/S…</option>${clanOpts}</select>
      <select id="asGoal" ${selStyle} style="width:auto"><option value="">Obiettivo…</option>${GOALS.map(G=>`<option value="${G.n}">${G.n}. ${esc(G.t)}</option>`).join("")}</select>
      <button class="btn small" id="asBtn">Registra consegna</button></div></details>
    ${filterBar(pend.length, done.length, all.length, goalSel)}
@@ -126,19 +126,19 @@ function renderLocal(){
       <div class="mailbox"><span>Materiale nella mail con oggetto</span> <span class="subject">${esc(subjectOf(x.clan,G))}</span>
         <a class="btn ghost small" href="${esc(gmailSearch(x.clan,G))}" target="_blank" rel="noopener">Cerca in Gmail</a></div>
       ${s.text && !/^Materiale inviato via email$|^Registrata dalla commissione$/.test(s.text)?`<p class="pre muted small" style="margin:0">${esc(s.text)}</p>${linksHtml(s.links)}`:""}
-      <small class="muted">${s.text==="Registrata dalla commissione"?"Registrata dalla commissione":"Segnata come inviata"} il ${new Date(s.updated_at).toLocaleString("it-IT")}${updatedAfter?" · il clan ha segnalato nuove prove dopo la valutazione":""}</small>
+      <small class="muted">${s.text==="Registrata dalla commissione"?"Registrata dalla commissione":"Segnata come inviata"} il ${new Date(s.updated_at).toLocaleString("it-IT")}${updatedAfter?" · la Comunità R/S ha segnalato nuove prove dopo la valutazione":""}</small>
       <div class="pins">${inputs}</div>
       <p class="total-line">Totale sfida: <b data-total>${computeLocal(G, sc)}</b> / ${LOCAL_MAX}</p>
-      <label class="f small">Commento per il clan<textarea style="min-height:60px" data-comment maxlength="1000">${esc(x.ev?.comment||"")}</textarea></label>
+      <label class="f small">Commento per la Comunità R/S<textarea style="min-height:60px" data-comment maxlength="1000">${esc(x.ev?.comment||"")}</textarea></label>
       <div><button class="btn small" data-save>${x.ev?"Aggiorna valutazione":"Salva valutazione"}</button></div>
      </article>`; }).join("")
-   : `<p class="muted">${S.filter==="pending"?"Nessuna sfida in attesa. Quando un clan consegna una sfida locale compare qui (premi Aggiorna).":"Nessuna sfida in questa vista."}</p>`}
+   : `<p class="muted">${S.filter==="pending"?"Nessuna sfida in attesa. Quando una Comunità R/S consegna una sfida locale compare qui (premi Aggiorna).":"Nessuna sfida in questa vista."}</p>`}
    </div>`;
   bindFilters(renderLocal);
   $("#gf").onchange=e=>{ S.goalFilter=+e.target.value; renderLocal(); };
   $("#asBtn").onclick=async e=>{
     const clan_id=$("#asClan").value, g=+$("#asGoal").value;
-    if(!clan_id || !g) return toast("Scegli clan e obiettivo.");
+    if(!clan_id || !g) return toast("Scegli Comunità R/S e obiettivo.");
     if(S.subs.some(x=>x.clan_id===clan_id && x.goal===g)) return toast("Questa consegna c'è già nell'elenco.");
     e.target.disabled=true;
     const { data, error } = await sb.from("submissions").insert({ clan_id, goal:g, text:"Registrata dalla commissione", links:[] }).select().single();
@@ -189,11 +189,11 @@ function renderCampana(){
   const keyPanel = mc
     ? `<p class="muted small" style="margin:0">Domanda a risposta multipla: il punteggio si assegna da solo. La risposta giusta è salvata solo nel database.</p>
        <div class="opts">${C.o.map((o,i)=>`<label class="opt ${K.correct===i?"right":""}"><input type="radio" name="kc" value="${i}" ${K.correct===i?"checked":""}> ${esc(o)}</label>`).join("")}</div>
-       <label class="f">Spiegazione mostrata ai clan dopo la risposta<textarea id="kFb" maxlength="1000" style="min-height:70px">${esc(K.feedback||"")}</textarea></label>
-       <div><button class="btn small ghost" id="saveKey">Salva risposta giusta e spiegazione</button> <span class="muted small">Se cambi la risposta giusta, i punti dei clan vengono ricalcolati.</span></div>`
-    : `<label class="f">Risposta di riferimento <span class="h">Riservata alla commissione: i clan non la vedono mai.</span><textarea id="refTxt" maxlength="4000" style="min-height:90px" placeholder="Inserite qui la risposta verificata e i criteri per assegnare i punti">${esc(K.reference||"")}</textarea></label>
+       <label class="f">Spiegazione mostrata alle Comunità R/S dopo la risposta<textarea id="kFb" maxlength="1000" style="min-height:70px">${esc(K.feedback||"")}</textarea></label>
+       <div><button class="btn small ghost" id="saveKey">Salva risposta giusta e spiegazione</button> <span class="muted small">Se cambi la risposta giusta, i punti delle Comunità R/S vengono ricalcolati.</span></div>`
+    : `<label class="f">Risposta di riferimento <span class="h">Riservata alla commissione: le Comunità R/S non la vedono mai.</span><textarea id="refTxt" maxlength="4000" style="min-height:90px" placeholder="Inserite qui la risposta verificata e i criteri per assegnare i punti">${esc(K.reference||"")}</textarea></label>
        <div><button class="btn small ghost" id="saveRef">Salva risposta di riferimento</button></div>`;
-  $("#app").innerHTML = `<section class="hero"><h1>Sfide campane</h1><p>Ricerche sulla Campania a risposta aperta: confronta la risposta del clan con quella di riferimento e dai da 0 a ${PTS_CAMPANA} punti. Contano dati corretti, anno e fonte citati.</p></section>
+  $("#app").innerHTML = `<section class="hero"><h1>Sfide campane</h1><p>Ricerche sulla Campania a risposta aperta: confronta la risposta della Comunità R/S con quella di riferimento e dai da 0 a ${PTS_CAMPANA} punti. Contano dati corretti, anno e fonte citati.</p></section>
    <div class="goal-tabs">${GOALS.map(X=>`<button data-cg="${X.n}" aria-pressed="${X.n===g}" style="--c:${X.c}">${X.n}${pendAll[X.n-1]?`<sup>${pendAll[X.n-1]}</sup>`:""}</button>`).join("")}</div>
    <section class="panel stack" style="margin-bottom:16px">
      <h2>${G.n}. ${esc(G.t)}</h2>
@@ -210,7 +210,7 @@ function renderCampana(){
       <p class="pre" style="margin:0">${mc && x.a.choice!=null ? esc(C.o[x.a.choice]||x.a.answer) : esc(x.a.answer)}</p>
       <small class="muted">Inviata il ${new Date(x.a.updated_at).toLocaleString("it-IT")}</small>
       ${mc?"":`<div class="pins"><label class="pin"><span>Punteggio</span><input type="number" min="0" max="${PTS_CAMPANA}" step="1" data-pts value="${x.ev?.points??""}" placeholder="0–${PTS_CAMPANA}"><em>/ ${PTS_CAMPANA}</em></label></div>
-      <label class="f small">Commento per il clan<textarea style="min-height:50px" data-comment maxlength="1000">${esc(x.ev?.comment||"")}</textarea></label>
+      <label class="f small">Commento per la Comunità R/S<textarea style="min-height:50px" data-comment maxlength="1000">${esc(x.ev?.comment||"")}</textarea></label>
       <div><button class="btn small" data-save>${x.ev?"Aggiorna valutazione":"Salva valutazione"}</button></div>`}
     </article>`).join("")
    : `<p class="muted">Nessuna risposta in questa vista.</p>`}
@@ -220,7 +220,7 @@ function renderCampana(){
   const sk=$("#saveKey"); if(sk) sk.onclick=async e=>{
     const sel=document.querySelector('input[name="kc"]:checked');
     if(!sel) return toast("Scegli la risposta giusta.");
-    if(K.correct!=null && +sel.value!==K.correct && !confirm("Cambiare la risposta giusta? I punti di tutti i clan che hanno già risposto verranno ricalcolati.")) return;
+    if(K.correct!=null && +sel.value!==K.correct && !confirm("Cambiare la risposta giusta? I punti di tutte le Comunità R/S che hanno già risposto verranno ricalcolati.")) return;
     e.target.disabled=true;
     const { data, error } = await sb.from("campana_key").upsert({ goal:g, correct:+sel.value, feedback:$("#kFb").value.trim()||null, updated_at:new Date().toISOString() },{ onConflict:"goal" }).select().single();
     if(!error) await sb.rpc("ricalcola_campana",{ p_goal:g });
@@ -252,7 +252,7 @@ function renderCampana(){
 }
 
 /* ---------- Richieste di accesso ---------- */
-const norm=s=>(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\bclan\b/g,"").replace(/[^a-z0-9]+/g," ").trim();
+const norm=s=>(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\b(clan|noviziato)\b/g,"").replace(/[^a-z0-9]+/g," ").trim();
 function guessClan(r){
   const all=Object.values(S.clans), t=norm(r.clan);
   return all.find(c=>c.email && c.email.toLowerCase()===r.email.toLowerCase())
@@ -262,7 +262,7 @@ function guessClan(r){
 }
 function renderReq(){
   const list=S.reqs.filter(r=>S.reqFilter==="all" || !r.gestita);
-  $("#app").innerHTML = `<section class="hero"><h1>Richieste di accesso</h1><p>Clan che hanno dimenticato codice o password. Trova il clan, comunica il codice o genera una password temporanea, e rispondi all'email indicata. Per sicurezza, rispondi solo se l'email coincide con quella di riferimento del clan, oppure dopo una verifica con i capi.</p></section>
+  $("#app").innerHTML = `<section class="hero"><h1>Richieste di accesso</h1><p>Comunità R/S che hanno dimenticato codice o password. Trova la Comunità R/S, comunica il codice o genera una password temporanea, e rispondi all'email indicata. Per sicurezza, rispondi solo se l'email coincide con quella di riferimento della Comunità R/S, oppure dopo una verifica con i capi.</p></section>
    <div class="filters"><button data-rf="open" aria-pressed="${S.reqFilter==="open"}">Da gestire (${S.reqs.filter(r=>!r.gestita).length})</button><button data-rf="all" aria-pressed="${S.reqFilter==="all"}">Tutte (${S.reqs.length})</button></div>
    <div class="stack" style="padding-bottom:60px">
    ${list.length? list.map(r=>{ const g=guessClan(r); const cands=Object.values(S.clans).filter(c=>c.zona===r.zona || c.id===g?.id).sort((a,b)=>a.name.localeCompare(b.name));
@@ -270,7 +270,7 @@ function renderReq(){
       <div class="adm-head"><b>${esc(r.clan)}</b><span class="muted">Zona ${esc(r.zona||"?")} · ${new Date(r.created_at).toLocaleString("it-IT")}</span>
         <span class="status ${r.gestita?"ok":"wait"}" style="margin-left:auto">${r.gestita?"Gestita":"Da gestire"}</span></div>
       <p style="margin:0">Email: <a href="mailto:${esc(r.email)}">${esc(r.email)}</a>${r.messaggio?` · ${esc(r.messaggio)}`:""}</p>
-      <div class="req-row"><select data-pick ${selStyle} style="width:auto;max-width:100%"><option value="">Scegli il clan…</option>${cands.map(c=>`<option value="${esc(c.id)}" ${g?.id===c.id?"selected":""}>${esc(c.name)}${c.grp?" · "+esc(c.grp):""}${c.zona!==r.zona?" (zona "+esc(c.zona)+")":""}</option>`).join("")}</select>
+      <div class="req-row"><select data-pick ${selStyle} style="width:auto;max-width:100%"><option value="">Scegli la Comunità R/S…</option>${cands.map(c=>`<option value="${esc(c.id)}" ${g?.id===c.id?"selected":""}>${esc(c.name)}${c.grp?" · "+esc(c.grp):""}${c.zona!==r.zona?" (zona "+esc(c.zona)+")":""}</option>`).join("")}</select>
         <span data-info class="muted small"></span></div>
       <div class="row-actions"><button class="btn small ghost" data-reset>Genera password temporanea</button>
         <button class="btn small ghost" data-done>${r.gestita?"Segna da gestire":"Segna come gestita"}</button></div>
@@ -285,7 +285,7 @@ function renderReq(){
     const showInfo=()=>{ const c=S.clans[pick.value]; info.innerHTML = c ? `Codice <b>${esc(c.code)}</b> · email di riferimento ${esc(c.email||"—")}${c.email && c.email.toLowerCase()===r.email.toLowerCase()?" ✓ coincide":" · <b>non coincide</b>"}` : ""; };
     pick.onchange=showInfo; showInfo();
     card.querySelector("[data-reset]").onclick=async e=>{
-      const c=S.clans[pick.value]; if(!c) return toast("Scegli prima il clan.");
+      const c=S.clans[pick.value]; if(!c) return toast("Scegli prima la Comunità R/S.");
       if(!confirm(`Generare una nuova password per ${c.name}? Quella attuale smetterà di funzionare.`)) return;
       e.target.disabled=true;
       const { data, error } = await sb.rpc("reset_password_clan",{ p_clan:c.id });
@@ -302,13 +302,13 @@ function renderReq(){
   });
 }
 function credBox(c, pw, to){
-  const subject="Strade 2030 · Accesso del clan";
-  const body=`Ciao,\n\necco i dati per entrare in Strade 2030:\n\nCodice clan: ${c.code}\n${pw?`Password temporanea: ${pw}\n\nAppena entrati, cambiatela da "Profilo del clan" > "Cambia password".\n`:""}\nBuona strada!\nLa commissione di Strade 2030`;
+  const subject="Strade 2030 · Accesso della Comunità R/S";
+  const body=`Ciao,\n\necco i dati per entrare in Strade 2030:\n\nCodice Comunità R/S: ${c.code}\n${pw?`Password temporanea: ${pw}\n\nAppena entrati, cambiatela da "Profilo della Comunità R/S" > "Cambia password".\n`:""}\nBuona strada!\nLa commissione di Strade 2030`;
   return `<div class="cred"><p style="margin:0">Codice: <b>${esc(c.code)}</b>${pw?` · Password temporanea: <b class="mono">${esc(pw)}</b>`:""}</p>
-    <a class="btn small" href="mailto:${esc(to||c.email||"")}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}">Scrivi la mail al clan</a></div>`;
+    <a class="btn small" href="mailto:${esc(to||c.email||"")}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}">Scrivi la mail alla Comunità R/S</a></div>`;
 }
 
-/* ---------- Clan ---------- */
+/* ---------- Comunità R/S ---------- */
 function renderClans(){
   const pts=Object.fromEntries(S.board.map(r=>[r.clan_id,r]));
   const rows=Object.values(S.clans).filter(c=>!S.zonaFilter || c.zona===S.zonaFilter)
@@ -319,11 +319,11 @@ function renderClans(){
   const nk=c=>(c.zona||"")+"|"+norm(c.name), all=Object.values(S.clans);
   const doppio=c=>all.some(x=>x.id!==c.id && (nk(x)===nk(c) || (c.email && x.email && x.email.toLowerCase()===c.email.toLowerCase())));
   const nDoppi=all.filter(doppio).length;
-  $("#app").innerHTML = `<section class="hero"><h1>Clan iscritti</h1><p>${Object.keys(S.clans).length} clan. Se un clan dimentica il codice lo trovi qui; per la password usa "Nuova password". Se un clan si è iscritto più volte, tieni l'account con più risposte e premi "Elimina" sugli altri.</p>
+  $("#app").innerHTML = `<section class="hero"><h1>Comunità&nbsp;R/S iscritte</h1><p>${Object.keys(S.clans).length} Comunità R/S. Se una Comunità R/S dimentica il codice lo trovi qui; per la password usa "Nuova password". Se una Comunità R/S si è iscritta più volte, tieni l'account con più risposte e premi "Elimina" sugli altri.</p>
     ${nDoppi?`<p class="notice" style="margin-top:12px"><b>${nDoppi} account sembrano doppioni</b> (stesso nome nella stessa zona o stessa email): sono segnati nella tabella.</p>`:""}
     <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn" id="csv">Scarica classifica (CSV)</button><select id="zf" ${selStyle} aria-label="Filtra per zona">${zonaOpts()}</select></div></section>
    <div class="panel tablewrap" style="margin-bottom:60px">
-    <table class="t"><thead><tr><th>Clan</th><th>Zona</th><th>Gruppo</th><th>Codice</th><th>Email</th><th>Campane</th><th>Locali</th><th>Galleria</th><th class="num">Totale</th><th></th></tr></thead>
+    <table class="t"><thead><tr><th>Comunità R/S</th><th>Zona</th><th>Gruppo</th><th>Codice</th><th>Email</th><th>Campane</th><th>Locali</th><th>Galleria</th><th class="num">Totale</th><th></th></tr></thead>
     <tbody>${rows.map(c=>{ const p=pts[c.id]||{}; return `<tr data-id="${esc(c.id)}"><td><b>${esc(c.name)}</b>${doppio(c)?` <span class="status wait">possibile doppione</span>`:""}</td><td>${esc(c.zona)}</td><td>${esc(c.grp||"")}</td><td>${esc(c.code)}</td><td>${c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:""}</td><td>${nCamp(c.id)}/17</td><td>${nSubs(c.id)}</td><td>${galleryCell(c)}</td>
       <td class="num"><b>${p.totale??0}</b></td><td class="row-btns"><button class="btn ghost small" data-pw>Nuova password</button> <button class="btn ghost small danger" data-del>Elimina</button></td></tr>
       <tr class="cred-row hidden" data-out-for="${esc(c.id)}"><td colspan="10"></td></tr>`; }).join("")}</tbody></table>
@@ -350,15 +350,15 @@ function galleryCell(c){
 }
 async function toggleGallery(b){
   const id=b.dataset.hide, hide=b.dataset.h!=="1";
-  if(hide && !confirm("Nascondere questo clan (foto, nomi e scelte) dalle pagine pubbliche?")) return;
+  if(hide && !confirm("Nascondere questa Comunità R/S (foto e nomi) dalle pagine pubbliche?")) return;
   b.disabled=true;
   const { error } = await sb.rpc("nascondi_clan",{ p_clan:id, p_hidden:hide });
   if(error){ b.disabled=false; console.error(error); return toast("Operazione non riuscita."); }
-  S.clans[id].hidden=hide; renderClans(); toast(hide?"Clan nascosto dalle pagine pubbliche":"Clan di nuovo visibile");
+  S.clans[id].hidden=hide; renderClans(); toast(hide?"Comunità R/S nascosta dalle pagine pubbliche":"Comunità R/S di nuovo visibile");
 }
 function downloadCsv(rows,pts){
   const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
-  const lines=[["Posizione","Clan","Zona","Gruppo","Codice","Email","Globale","Campana","Locale","Bonus","Totale","Sfide locali valutate"].map(q).join(";")];
+  const lines=[["Posizione","Comunità R/S","Zona","Gruppo","Codice","Email","Globale","Campana","Locale","Bonus","Totale","Sfide locali valutate"].map(q).join(";")];
   rows.forEach((c,i)=>{ const p=pts[c.id]||{}; lines.push([i+1,c.name,c.zona,c.grp,c.code,c.email,p.globale??0,p.campana??0,p.locale??0,p.bonus??0,p.totale??0,p.completate??0].map(q).join(";")); });
   const blob=new Blob(["﻿"+lines.join("\n")],{type:"text/csv;charset=utf-8"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
@@ -379,11 +379,11 @@ function renderFuturo(){
   rows.forEach(r=>{ (byClan[r.soggetto] ||= {nome:r.nome, zona:r.zona, grp:r.grp, goals:[]}).goals.push(r); });
   const list=Object.values(byClan);
   const zone=ZONE.filter(z=>list.some(c=>c.zona===z));
-  $("#app").innerHTML = `<section class="hero"><h1>Obiettivi di futuro</h1><p>Le scelte dei clan. <b>Sono visibili solo qui</b>: ogni clan vede soltanto le proprie, così nessuno si fa influenzare. Mostratele a tutti alla fine della sfida.</p></section>
+  $("#app").innerHTML = `<section class="hero"><h1>Obiettivi di futuro</h1><p>Le scelte delle Comunità R/S. <b>Sono visibili solo qui</b>: ogni Comunità R/S vede soltanto le proprie, così nessuno si fa influenzare. Mostratele a tutti alla fine della sfida.</p></section>
    <div class="filters"><select id="zf" ${selStyle} aria-label="Filtra per zona">${zonaOpts()}</select><button class="btn ghost small" id="csvF" type="button">Scarica per Excel</button></div>
    <div class="stack" style="padding-bottom:60px">
    <section class="panel"><h2>Quante volte è stato scelto ogni obiettivo</h2>
-    <p class="muted">${list.length} clan${S.zonaFilter?" della zona "+esc(S.zonaFilter):""} hanno scelto i loro 3 obiettivi.</p>
+    <p class="muted">${list.length} Comunità R/S${S.zonaFilter?" della zona "+esc(S.zonaFilter):""} hanno scelto i loro 3 obiettivi.</p>
     <ol class="hbars">${counts.map(({G,n})=>`<li>${sdgBox(G.n,"mini")}<span class="hb-label">${G.n}. ${esc(G.t)}</span><span class="hb-track"><i style="width:${n/maxC*100}%;background:${G.c}"></i></span><b>${n}</b></li>`).join("")}</ol>
    </section>
    ${list.length ? zone.map(z=>`<section class="zone-block"><h2 class="zone-title">Zona ${esc(z)} <span>${list.filter(c=>c.zona===z).length}</span></h2>
@@ -391,29 +391,29 @@ function renderFuturo(){
       <h3>${esc(c.nome)}${c.grp?` <span>- ${esc(c.grp)}</span>`:""}</h3>
       <div class="choice-icons">${c.goals.sort((a,b)=>a.goal-b.goal).map(r=>`<div>${sdgBox(r.goal)}${r.perche?`<p>${esc(r.perche)}</p>`:""}</div>`).join("")}</div>
     </article>`).join("")}</div></section>`).join("")
-    : `<p class="muted">Ancora nessun clan ha scelto i suoi obiettivi.</p>`}
+    : `<p class="muted">Ancora nessuna Comunità R/S ha scelto i suoi obiettivi.</p>`}
    </div>`;
   $("#zf").onchange=e=>{ S.zonaFilter=e.target.value; renderFuturo(); };
   $("#csvF").onclick=()=>{
     const q=v=>`"${String(v??"").replace(/"/g,'""')}"`;
-    const lines=[["Zona","Clan","Gruppo","Obiettivo","Nome obiettivo","Perché"].map(q).join(";")];
+    const lines=[["Zona","Comunità R/S","Gruppo","Obiettivo","Nome obiettivo","Perché"].map(q).join(";")];
     rows.forEach(r=>lines.push([r.zona,r.nome,r.grp,r.goal,goal(r.goal).t,r.perche].map(q).join(";")));
     const blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"});
     const u=URL.createObjectURL(blob), l=document.createElement("a"); l.href=u; l.download="obiettivi-di-futuro.csv"; l.click(); URL.revokeObjectURL(u);
   };
 }
 
-/* ---------- Eliminare un clan (per esempio un account doppio) ---------- */
+/* ---------- Eliminare una Comunità R/S (per esempio un account doppio) ---------- */
 async function eliminaClan(b){
   const id=b.closest("tr").dataset.id, c=S.clans[id];
   const risposte=S.camp.filter(s=>s.clan_id===id).length, consegne=S.subs.filter(s=>s.clan_id===id).length;
   if(!confirm(`Eliminare definitivamente "${c.name}" (zona ${c.zona}, codice ${c.code})?\n\nSi cancellano anche le sue risposte (${risposte} campane), le sfide locali consegnate (${consegne}), le valutazioni, gli obiettivi di futuro e la foto. Non si può annullare.`)) return;
-  const conferma=prompt(`Per confermare scrivi il codice del clan: ${c.code}`);
+  const conferma=prompt(`Per confermare scrivi il codice della Comunità R/S: ${c.code}`);
   if((conferma||"").trim().toUpperCase()!==c.code.toUpperCase()) return toast("Eliminazione annullata: il codice non corrisponde.");
   b.disabled=true;
   if(c.photo){ try{ await sb.storage.from("clan").remove([c.photo]); }catch(e){} }
   const { error } = await sb.rpc("elimina_clan",{ p_clan:id });
-  if(error){ b.disabled=false; console.error(error); return toast("Clan non eliminato. Hai eseguito l'aggiornamento 8 del database?"); }
+  if(error){ b.disabled=false; console.error(error); return toast("Comunità R/S non eliminata. Hai eseguito l'aggiornamento 8 del database?"); }
   toast(`${c.name} eliminato`);
   await loadAll();
 }

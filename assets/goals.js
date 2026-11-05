@@ -7,7 +7,7 @@
    campane sono nel database (tabella campana_key).
    ===================================================================== */
 
-/* Come i clan consegnano i materiali delle sfide locali (foto, documenti, video).
+/* Come le Comunità R/S consegnano i materiali delle sfide locali (foto, documenti, video).
    modo: "email"  = una mail per sfida all'indirizzo indicato qui sotto
          "modulo" = Google Modulo con caricamento file
          ""       = nessuna istruzione (solo racconto e link nel sito)
@@ -363,7 +363,7 @@ const GOALS = [
         "k": [
           "Dati raccolti",
           "Intervista significativa",
-          "Riflessione del clan"
+          "Riflessione della Comunità R/S"
         ]
       },
       {
@@ -793,7 +793,7 @@ const GOALS = [
         ]
       },
       {
-        "t": "Riparare invece di buttare: con l'aiuto di un riparatore del territorio o di una persona che ha conoscenze in materia, imparate a riparare uno o più oggetti di uso comune del clan o del paese (bici, zaini, attrezzatura: ad esempio rattoppare, cucire, sostituire un pezzo o riparare una camera d'aria) e mettetelo in pratica con le vostre mani.",
+        "t": "Riparare invece di buttare: con l'aiuto di un riparatore del territorio o di una persona che ha conoscenze in materia, imparate a riparare uno o più oggetti di uso comune della Comunità R/S o del paese (bici, zaini, attrezzatura: ad esempio rattoppare, cucire, sostituire un pezzo o riparare una camera d'aria) e mettetelo in pratica con le vostre mani.",
         "p": 10,
         "k": [
           "Riparazione fatta con le vostre mani",
@@ -806,7 +806,7 @@ const GOALS = [
         "p": 10,
         "k": [
           "Evento realizzato",
-          "Partecipazione esterna al clan",
+          "Partecipazione esterna alla Comunità R/S",
           "Oggetti contati"
         ]
       }
@@ -855,7 +855,7 @@ const GOALS = [
         ]
       },
       {
-        "t": "Scrivete una \"carta clima\" del clan con 3 impegni concreti e applicatela nella prossima uscita, misurando quanto avete ridotto.",
+        "t": "Scrivete una \"carta clima\" della Comunità R/S con 3 impegni concreti e applicatela nella prossima uscita, misurando quanto avete ridotto.",
         "p": 10,
         "k": [
           "Impegni concreti",

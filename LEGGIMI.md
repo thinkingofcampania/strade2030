@@ -199,3 +199,12 @@ Metti le 17 icone in `assets/img/sdg/` con i nomi `goal-1.png` ... `goal-17.png`
 - Sulla mappa resta solo l'indicatore per sbloccare gli obiettivi di futuro (tolto il percorso con la coppa).
 - Bonus "Sfida completa": +10 punti per ogni sfida locale con tutte e 3 le prove valutate (sostituisce il vecchio +5).
 
+## Aggiornamento 9 · Comunità R/S (clan e noviziato)
+
+**Database:** esegui `supabase/aggiornamento-9.sql`.
+
+- In tutto il sito "clan" diventa "Comunità R/S" (clan + noviziato).
+- In registrazione, oltre al nome del clan, c'è il nome del noviziato (facoltativo). Le Comunità R/S già iscritte lo aggiungono da "Profilo della Comunità R/S".
+- Ovunque compare il nome completo, per esempio "Clan Croce del Sud e Noviziato Stella Polare".
+- Nel codice e nel database le tabelle si chiamano ancora `clans` (non va cambiato).
+

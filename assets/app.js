@@ -1,5 +1,5 @@
 /* =====================================================================
-   STRADE 2030 · App dei clan
+   STRADE 2030 · App delle Comunità R/S (clan e noviziato)
    ===================================================================== */
 $("#brand").innerHTML = BRAND + `<div><b>Strade 2030</b><small>Thinking of Campania · Il domani è oggi</small></div>`;
 
@@ -15,7 +15,7 @@ const S = {
 const uid = () => S.session?.user?.id;
 const goal = n => GOALS[n-1];
 
-/* ---------- Punti del proprio clan ---------- */
+/* ---------- Punti della propria Comunità R/S ---------- */
 function tally(){
   let g=0,c=0,l=0,b=0,done=0;
   for(const G of GOALS){
@@ -143,28 +143,29 @@ function renderAuth(){
   const m = S.authMode;
   let form;
   if(m==="register") form = `
-      <div class="notice one-signup"><b>Una sola iscrizione per clan.</b> Registrate il clan una sola volta, da un solo membro, a nome di tutti: poi entrate tutti con lo stesso codice e la stessa password. Gli account doppi verranno rimossi.</div>
+      <div class="notice one-signup"><b>Una sola iscrizione per Comunità R/S.</b> Registrate la Comunità R/S (clan e noviziato insieme) una sola volta, da un solo membro, a nome di tutti: poi entrate tutti con lo stesso codice e la stessa password. Gli account doppi verranno rimossi.</div>
       <label class="f">Nome del clan<input type="text" id="rName" required maxlength="60" placeholder="Es. Clan Croce del Sud"></label>
+      <label class="f">Nome del noviziato <span class="h">Facoltativo. Se clan e noviziato hanno un nome solo, lasciate vuoto.</span><input type="text" id="rNov" maxlength="60" placeholder="Es. Noviziato Stella Polare"></label>
       <label class="f">Gruppo scout<input type="text" id="rGroup" required maxlength="60" placeholder="Es. Santa Maria CV1"></label>
       <label class="f">Zona${zonaSelect("rZona")}</label>
-      <label class="f">Email di riferimento del clan <span class="h">Serve solo per recuperare codice o password. Non compare sul sito. Va bene quella del clan o di un capo.</span><input type="email" id="rEmail" required maxlength="120" autocomplete="email" placeholder="nome@esempio.it"></label>
+      <label class="f">Email di riferimento della Comunità R/S <span class="h">Serve solo per recuperare codice o password. Non compare sul sito. Va bene quella della Comunità R/S o di un capo.</span><input type="email" id="rEmail" required maxlength="120" autocomplete="email" placeholder="nome@esempio.it"></label>
       <fieldset class="profile-box">
-        <legend>Foto e membri del clan <span class="h">Facoltativo, potete aggiungerli anche dopo</span></legend>
+        <legend>Foto e membri della Comunità R/S <span class="h">Facoltativo, potete aggiungerli anche dopo</span></legend>
         ${profileFields(null)}
       </fieldset>
-      <label class="f">Password del clan <span class="h">Almeno 6 caratteri. Condividetela solo dentro il clan.</span><input type="password" id="rPw" required minlength="6" autocomplete="new-password"></label>
+      <label class="f">Password della Comunità R/S <span class="h">Almeno 6 caratteri. Condividetela solo dentro la Comunità R/S.</span><input type="password" id="rPw" required minlength="6" autocomplete="new-password"></label>
       <label class="f">Ripeti la password<input type="password" id="rPw2" required minlength="6" autocomplete="new-password"></label>
-      <button class="btn" type="submit">Registra il clan e inizia</button>`;
+      <button class="btn" type="submit">Registra la Comunità R/S e inizia</button>`;
   else if(m==="login") form = `
-      <label class="f">Codice clan <span class="h">Ve l'abbiamo dato alla registrazione, es. FENICE-4821</span><input type="text" id="lCode" required autocapitalize="characters" placeholder="FENICE-4821"></label>
-      <label class="f">Password del clan<input type="password" id="lPw" required autocomplete="current-password"></label>
+      <label class="f">Codice Comunità R/S <span class="h">Ve l'abbiamo dato alla registrazione, es. FENICE-4821</span><input type="text" id="lCode" required autocapitalize="characters" placeholder="FENICE-4821"></label>
+      <label class="f">Password della Comunità R/S<input type="password" id="lPw" required autocomplete="current-password"></label>
       <button class="btn" type="submit">Entra</button>
       <button class="linkbtn" type="button" data-mode="recover">Codice o password dimenticati?</button>`;
   else form = `
-      <p style="margin:0">Scriveteci chi siete: la commissione vi risponderà all'email di riferimento del clan con il codice o con una password temporanea. Non vi manderemo mai la vostra password attuale: nessuno la conosce.</p>
+      <p style="margin:0">Scriveteci chi siete: la commissione vi risponderà all'email di riferimento della Comunità R/S con il codice o con una password temporanea. Non vi manderemo mai la vostra password attuale: nessuno la conosce.</p>
       <label class="f">Zona${zonaSelect("qZona")}</label>
-      <label class="f">Nome del clan e gruppo<input type="text" id="qClan" required maxlength="80" placeholder="Es. Clan Croce del Sud, Santa Maria CV1"></label>
-      <label class="f">Email di riferimento del clan<input type="email" id="qEmail" required maxlength="120" autocomplete="email"></label>
+      <label class="f">Nome della Comunità R/S e gruppo<input type="text" id="qClan" required maxlength="80" placeholder="Es. Clan Croce del Sud, Santa Maria CV1"></label>
+      <label class="f">Email di riferimento della Comunità R/S<input type="email" id="qEmail" required maxlength="120" autocomplete="email"></label>
       <label class="f">Cosa avete dimenticato? <span class="h">Facoltativo</span><textarea id="qMsg" maxlength="500" style="min-height:80px" placeholder="Es. abbiamo perso il codice"></textarea></label>
       <button class="btn" type="submit">Invia la richiesta</button>
       <button class="linkbtn" type="button" data-mode="login">Torna all'accesso</button>`;
@@ -177,7 +178,7 @@ function renderAuth(){
     <p class="claim">Diciassette strade, un solo territorio.</p>
     <p class="muted">Pensate globale. Scoprite la Campania. Agite in locale. <button class="linkbtn" type="button" data-spirit>Lo spirito del gioco</button></p>
     <div class="seg" role="group">
-      <button type="button" data-mode="register" aria-pressed="${m==="register"}">Registra il clan</button>
+      <button type="button" data-mode="register" aria-pressed="${m==="register"}">Registra la Comunità R/S</button>
       <button type="button" data-mode="login" aria-pressed="${m!=="register"}">Siamo già registrati</button>
     </div>
     <form id="authForm" class="panel stack" style="margin-top:12px" autocomplete="off">
@@ -201,7 +202,7 @@ const codeToEmail = code => code.trim().toLowerCase().replace(/\s+/g,"") + "@" +
 const emailOk = v => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
 
 async function doRegister(btn){
-  const name=$("#rName").value.trim(), grp=$("#rGroup").value.trim(), zona=$("#rZona").value, email=$("#rEmail").value.trim();
+  const name=$("#rName").value.trim(), noviziato=$("#rNov").value.trim()||null, grp=$("#rGroup").value.trim(), zona=$("#rZona").value, email=$("#rEmail").value.trim();
   const pw=$("#rPw").value, pw2=$("#rPw2").value;
   if(!ZONE.includes(zona)) return authError("Scegliete la zona dal menu.");
   if(!emailOk(email)) return authError("Controllate l'email di riferimento.");
@@ -221,18 +222,18 @@ async function doRegister(btn){
     }
     if(!session) throw new Error("Codice non disponibile, riprova.");
     S.session = session;
-    const { error:e2 } = await sb.from("clans").insert({ id:user.id, name, grp, zona, email, code, members: prof.members });
+    const { error:e2 } = await sb.from("clans").insert({ id:user.id, name, noviziato, grp, zona, email, code, members: prof.members });
     if(e2) throw e2;
     if(prof.file){
-      btn.textContent="Carico la foto del clan…";
+      btn.textContent="Carico la foto della Comunità R/S…";
       try{ const path=await uploadClanPhoto(prof.file); await sb.from("clans").update({ photo:path }).eq("id",user.id); }
-      catch(ph){ console.error(ph); toast("Clan registrato, ma la foto non è stata caricata: aggiungetela dalla mappa."); }
+      catch(ph){ console.error(ph); toast("Comunità R/S registrata, ma la foto non è stata caricata: aggiungetela dalla mappa."); }
     }
     S.newCode = code; S.gallery = null;
     await loadAll();
   }catch(err){
     console.error(err);
-    btn.disabled=false; btn.textContent="Registra il clan e inizia";
+    btn.disabled=false; btn.textContent="Registra la Comunità R/S e inizia";
     if(err.message==="conferma-email") authError("Registrazione bloccata: l'organizzazione deve disattivare la conferma email in Supabase (vedi LEGGIMI).");
     else if(/rate|many/i.test(err.message||"")) authError("Troppe registrazioni in poco tempo da questa rete. Riprovate tra qualche minuto.");
     else authError("Registrazione non riuscita. Controllate i dati e riprovate.");
@@ -243,7 +244,7 @@ async function doLogin(btn){
   const code=$("#lCode").value, pw=$("#lPw").value;
   btn.disabled=true;
   const { data, error } = await sb.auth.signInWithPassword({ email: codeToEmail(code), password: pw });
-  if(error){ btn.disabled=false; return authError("Codice clan o password non corretti."); }
+  if(error){ btn.disabled=false; return authError("Codice Comunità R/S o password non corretti."); }
   S.session=data.session; S.tab="map";
   await loadAll();
 }
@@ -251,7 +252,7 @@ async function doLogin(btn){
 async function doRecover(btn){
   const zona=$("#qZona").value, clan=$("#qClan").value.trim(), email=$("#qEmail").value.trim(), messaggio=$("#qMsg").value.trim();
   if(!ZONE.includes(zona)) return authError("Scegliete la zona dal menu.");
-  if(clan.length<2) return authError("Scrivete il nome del clan.");
+  if(clan.length<2) return authError("Scrivete il nome della Comunità R/S.");
   if(!emailOk(email)) return authError("Controllate l'email.");
   btn.disabled=true;
   const { error } = await sb.from("richieste_accesso").insert({ zona, clan, email, messaggio: messaggio||null });
@@ -265,27 +266,28 @@ function renderCode(){
   <div class="reg">
     <h1>Benvenuti!</h1>
     <p class="claim">${esc(S.clan?.name||"")}</p>
-    <p>Questo è il vostro codice clan. Scrivetelo sul quaderno di clan: con il codice e la password potete entrare da qualsiasi telefono.</p>
+    <p>Questo è il vostro codice Comunità R/S. Scrivetelo sul quaderno di comunità: con il codice e la password potete entrare da qualsiasi telefono.</p>
     <div class="codebox">${esc(S.newCode)}</div>
     <button class="btn" id="goMap" style="width:100%">Ho segnato il codice, apriamo la mappa</button>
   </div>`;
   $("#goMap").onclick=()=>{ S.newCode=null; render(); };
 }
 
-/* Account creato ma registrazione del clan interrotta */
+/* Account creato ma registrazione della Comunità R/S interrotta */
 function renderComplete(){
   const code = (S.session.user.email||"").split("@")[0].toUpperCase();
   if(!S.session.user.email?.endsWith("@"+CLAN_DOMAIN)){
-    return fatal("Questo account non è un clan. Se sei della commissione usa la pagina di valutazione.");
+    return fatal("Questo account non è di una Comunità R/S. Se sei della commissione usa la pagina di valutazione.");
   }
   $("#app").innerHTML = `
   <div class="reg"><h1>Completate la registrazione</h1>
    <form id="compForm" class="panel stack" style="margin-top:20px">
-    <p style="margin:0">Codice clan: <b>${esc(code)}</b></p>
-    <label class="f">Nome del clan<input type="text" id="cName" required maxlength="60"></label>
+    <p style="margin:0">Codice Comunità R/S: <b>${esc(code)}</b></p>
+    <label class="f">Nome del clan<input type="text" id="cName" required maxlength="60" placeholder="Es. Clan Croce del Sud"></label>
+    <label class="f">Nome del noviziato <span class="h">Facoltativo</span><input type="text" id="cNov" maxlength="60" placeholder="Es. Noviziato Stella Polare"></label>
     <label class="f">Gruppo scout<input type="text" id="cGroup" required maxlength="60"></label>
     <label class="f">Zona${zonaSelect("cZona")}</label>
-    <label class="f">Email di riferimento del clan<input type="email" id="cEmail" required maxlength="120"></label>
+    <label class="f">Email di riferimento della Comunità R/S<input type="email" id="cEmail" required maxlength="120"></label>
     <button class="btn" type="submit">Salva e apri la mappa</button><p class="err hidden" id="authErr"></p>
    </form></div>`;
   $("#compForm").addEventListener("submit", async e=>{
@@ -293,7 +295,7 @@ function renderComplete(){
     const zona=$("#cZona").value, email=$("#cEmail").value.trim();
     if(!ZONE.includes(zona)) return authError("Scegliete la zona dal menu.");
     if(!emailOk(email)) return authError("Controllate l'email.");
-    const { error } = await sb.from("clans").insert({ id:uid(), name:$("#cName").value.trim(), grp:$("#cGroup").value.trim(), zona, email, code });
+    const { error } = await sb.from("clans").insert({ id:uid(), name:$("#cName").value.trim(), noviziato:$("#cNov").value.trim()||null, grp:$("#cGroup").value.trim(), zona, email, code });
     if(error) return authError("Salvataggio non riuscito, riprovate.");
     await loadAll();
   });
@@ -315,7 +317,7 @@ function progressCard(){
   const bar=(v,max,label)=>`<div class="pbar"><span>${label}</span><b>${Math.min(v,max)}/${max}</b><i style="--w:${Math.min(100,v/max*100)}%"></i></div>`;
   return `<section class="unlock ${p.sbloccato?"is-open":""}">
     <div><h2>${p.sbloccato?"Obiettivi di futuro sbloccati":"Sbloccate gli obiettivi di futuro"}</h2>
-    <p>${p.sbloccato?"Avete guardato tutti i 17 obiettivi. Ora scegliete i 3 su cui il vostro clan vuole impegnarsi.":"Rispondete a tutte le domande globali e campane e consegnate almeno una sfida locale: così avrete guardato da vicino tutta l'Agenda 2030."}</p></div>
+    <p>${p.sbloccato?"Avete guardato tutti i 17 obiettivi. Ora scegliete i 3 su cui la vostra Comunità R/S vuole impegnarsi.":"Rispondete a tutte le domande globali e campane e consegnate almeno una sfida locale: così avrete guardato da vicino tutta l'Agenda 2030."}</p></div>
     ${p.sbloccato?`<button class="btn" data-tab="future">Scegliete i vostri 3 obiettivi</button>`:
       `<div class="pbars">${bar(p.globali,17,"Domande globali")}${bar(p.campane,17,"Domande campane")}${bar(p.locali,SBLOCCO_LOCALI,"Sfide locali consegnate")}</div>`}
   </section>`;
@@ -325,7 +327,7 @@ function renderMap(){
   $("#app").innerHTML = `<section class="hero">
     <p class="kicker">Strade 2030 · Thinking of Campania</p>
     <h1>Scegliete la vostra prossima tappa.</h1>
-    <div class="clan-line"><span class="chip">${esc(c.name)}</span><span class="chip soft">Zona ${esc(c.zona)}${c.grp?" · "+esc(c.grp):""}</span><span class="chip soft">Codice ${esc(c.code)}</span><span class="chip soft">${t.done} sfide locali valutate</span><button class="chip linkchip" id="editProfile">Profilo del clan</button><button class="chip linkchip" data-spirit>Lo spirito del gioco</button></div>
+    <div class="clan-line"><span class="chip">${esc(nomeCom(c))}</span><span class="chip soft">Zona ${esc(c.zona)}${c.grp?" · "+esc(c.grp):""}</span><span class="chip soft">Codice ${esc(c.code)}</span><span class="chip soft">${t.done} sfide locali valutate</span><button class="chip linkchip" id="editProfile">Profilo della Comunità R/S</button><button class="chip linkchip" data-spirit>Lo spirito del gioco</button></div>
   </section>
   ${progressCard()}
   <section class="trail" aria-label="Obiettivi dell'Agenda 2030">
@@ -348,12 +350,12 @@ const partsHtml = (parts, prefix, scores) => `<ol class="parts prove">${parts.ma
 function srcHtml(src){
   return src.map(([n,u])=>u&&safeUrl(u) ? `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(n)}</a>` : esc(n)).join(" · ");
 }
-function mailSubject(G){ const c=S.clan; return `${c.zona} - ${c.name} - Obiettivo ${G.n} - Sfida locale`; }
+function mailSubject(G){ const c=S.clan; return `${c.zona} - ${nomeCom(c)} - Obiettivo ${G.n} - Sfida locale`; }
 function consegnaHtml(G){
   const c=S.clan, subject=mailSubject(G);
   const regole=`<ul class="deliver small">
       <li>Usate sempre l'oggetto qui sopra.</li>
-      <li>Nel testo della mail scrivete il nome del clan, il codice (${esc(c.code)}), quali prove avete fatto (1, 2, 3) e cosa contiene ogni file.</li>
+      <li>Nel testo della mail scrivete il nome della Comunità R/S, il codice (${esc(c.code)}), quali prove avete fatto (1, 2, 3) e cosa contiene ogni file.</li>
       <li>Potete mandare le prove tutte insieme o una alla volta, sempre con lo stesso oggetto.</li>
       <li>File oltre ${CONSEGNA.limiteMB} MB: non allegateli. Caricateli su Google Drive, WeTransfer o Dropbox e incollate il link nella mail, con accesso "chiunque abbia il link".</li>
       <li>Video: meglio compressi, oppure su YouTube come "non in elenco".</li></ul>`;
@@ -520,15 +522,15 @@ async function markSent(n,btn){
   await refreshSblocco(); openGoal(n);
 }
 
-/* ---------- Profilo del clan: foto, membri, email, password ---------- */
+/* ---------- Profilo della Comunità R/S: nomi, foto, membri, email, password ---------- */
 function profileFields(c){
   const members=(c?.members||[]).join("\n");
   return `
-    <label class="f">Membri del clan <span class="h">Un nome per riga (massimo 40). Compariranno nella pagina "I clan".</span>
+    <label class="f">Membri della Comunità R/S <span class="h">Un nome per riga (massimo 40). Compariranno nella pagina "Comunità R/S".</span>
       <textarea id="pMembers" maxlength="2400" style="min-height:120px" placeholder="Anna Esposito&#10;Luca Russo&#10;…">${esc(members)}</textarea></label>
-    <label class="f">${c?.photo ? "Cambia la foto del clan" : "Foto del clan"} <span class="h">Una foto di gruppo, in orizzontale se possibile. JPG o PNG.</span>
+    <label class="f">${c?.photo ? "Cambia la foto della Comunità R/S" : "Foto della Comunità R/S"} <span class="h">Una foto di gruppo, in orizzontale se possibile. JPG o PNG.</span>
       <input type="file" id="pPhoto" accept="image/*"></label>
-    <label class="check"><input type="checkbox" id="pConsent"> <span>Confermiamo che tutti i membri del clan, e i genitori di chi è minorenne, sono d'accordo a pubblicare foto e nomi su questo sito.</span></label>`;
+    <label class="check"><input type="checkbox" id="pConsent"> <span>Confermiamo che tutti i membri della Comunità R/S, e i genitori di chi è minorenne, sono d'accordo a pubblicare foto e nomi su questo sito.</span></label>`;
 }
 function readProfile(){
   const members=($("#pMembers")?.value||"").split(/\n|,/).map(s=>s.trim().replace(/\s+/g," ").slice(0,60)).filter(Boolean);
@@ -562,13 +564,15 @@ function openProfile(){
   S.openGoal=null;
   dlg.innerHTML = `
     <div class="m-head" style="--c:var(--kerchief)">
-      <div><h2>${esc(c.name)}</h2><p>Zona ${esc(c.zona)}${c.grp?" · "+esc(c.grp):""} · Codice ${esc(c.code)}</p></div>
+      <div><h2>${esc(nomeCom(c))}</h2><p>Zona ${esc(c.zona)}${c.grp?" · "+esc(c.grp):""} · Codice ${esc(c.code)}</p></div>
       <button class="m-close" aria-label="Chiudi" id="mClose">×</button>
     </div>
     <div class="m-body">
       <form id="profForm" class="stack" style="padding-top:18px">
-        <h3>Foto e membri <span class="pts">pagina "I clan"</span></h3>
-        ${c.photo?`<img class="prof-photo" src="${esc(clanPhotoUrl(c.photo))}" alt="Foto del ${esc(c.name)}">`:""}
+        <h3>Nome della Comunità R/S</h3>
+        <label class="f">Nome del noviziato <span class="h">Facoltativo. Compare accanto al nome del clan, es. "${esc(c.name)} e Noviziato Stella Polare".</span><input type="text" id="pNov" maxlength="60" value="${esc(c.noviziato||"")}" placeholder="Es. Noviziato Stella Polare"></label>
+        <h3>Foto e membri <span class="pts">pagina "Comunità R/S"</span></h3>
+        ${c.photo?`<img class="prof-photo" src="${esc(clanPhotoUrl(c.photo))}" alt="Foto di ${esc(nomeCom(c))}">`:""}
         ${profileFields(c)}
         <label class="f">Email di riferimento <span class="h">Per recuperare codice o password. Non compare sul sito.</span><input type="email" id="pEmail" required maxlength="120" value="${esc(c.email||"")}"></label>
         <p class="err hidden" id="profErr"></p>
@@ -593,13 +597,13 @@ function openProfile(){
     if(!emailOk(email)) return fail("Controllate l'email di riferimento.");
     btn.disabled=true; btn.textContent="Salvataggio…";
     try{
-      const upd={ members: prof.members, email };
+      const upd={ members: prof.members, email, noviziato: $("#pNov").value.trim()||null };
       if(prof.file){ btn.textContent="Carico la foto…"; upd.photo=await uploadClanPhoto(prof.file); }
       const { error } = await sb.from("clans").update(upd).eq("id",uid());
       if(error) throw error;
       if(upd.photo && c.photo) sb.storage.from("clan").remove([c.photo]).catch(()=>{});
       Object.assign(S.clan, upd); S.gallery=null;
-      toast("Profilo del clan aggiornato"); dlg.close();
+      toast("Profilo della Comunità R/S aggiornato"); dlg.close();
     }catch(ex){
       console.error(ex); btn.disabled=false; btn.textContent="Salva";
       fail(ex.message==="foto-non-valida" ? "La foto non è in un formato valido: usate JPG o PNG." : "Salvataggio non riuscito. Riprovate.");
@@ -624,7 +628,7 @@ function renderBoard(){
   const all=S.board, rows=S.boardZona ? all.filter(r=>r.zona===S.boardZona) : all;
   const max=Math.max(1,...rows.map(r=>r.totale));
   let pos=0, prev=null;
-  $("#app").innerHTML = `<section class="hero"><p class="kicker">Strade 2030 · Il domani è oggi</p><h1>Classifica dei clan</h1><p>${all.length} clan in cammino. Domande globali e campane contano subito; i punti delle sfide locali compaiono appena la commissione le valuta.</p></section>
+  $("#app").innerHTML = `<section class="hero"><p class="kicker">Strade 2030 · Il domani è oggi</p><h1>Classifica delle Comunità&nbsp;R/S</h1><p>${all.length} Comunità R/S in cammino. Domande globali e campane contano subito; i punti delle sfide locali compaiono appena la commissione le valuta.</p></section>
    <div class="filters"><select id="zf" aria-label="Filtra per zona" class="pill-select"><option value="">Tutte le zone</option>${ZONE.map(z=>`<option ${z===S.boardZona?"selected":""}>${esc(z)}</option>`).join("")}</select></div>
    <div class="panel board-panel" style="margin-bottom:60px">
     ${rows.length?`<ol class="lb">${rows.map((r,i)=>{ if(r.totale!==prev){pos=i+1;prev=r.totale;}
@@ -636,27 +640,27 @@ function renderBoard(){
           <div class="bar" aria-hidden="true"><i style="width:${r.globale/max*100}%;background:var(--ink-soft)"></i><i style="width:${r.campana/max*100}%;background:var(--warn)"></i><i style="width:${r.locale/max*100}%;background:var(--ok)"></i><i style="width:${r.bonus/max*100}%;background:var(--kerchief)"></i></div>
           <ul class="legend"><li><i style="background:var(--ink-soft)"></i>Globali <b>${r.globale}</b></li><li><i style="background:var(--warn)"></i>Campane <b>${r.campana}</b></li><li><i style="background:var(--ok)"></i>Locali <b>${r.locale}</b></li>${r.bonus?`<li><i style="background:var(--kerchief)"></i>Bonus <b>${r.bonus}</b></li>`:""}</ul>
         </div></li>`; }).join("")}</ol>`
-    :`<p class="muted">${S.boardZona?"Nessun clan di questa zona in classifica.":"Nessun clan ancora in gara. Il primo a registrarsi apre la strada."}</p>`}
+    :`<p class="muted">${S.boardZona?"Nessuna Comunità R/S di questa zona in classifica.":"Nessuna Comunità R/S ancora in gara. La prima a registrarsi apre la strada."}</p>`}
    </div>`;
   $("#zf").onchange=e=>{ S.boardZona=e.target.value; renderBoard(); };
 }
 
-/* ---------- Galleria dei clan, per zona ---------- */
+/* ---------- Galleria delle Comunità R/S, per zona ---------- */
 function renderGallery(){
-  const head = `<section class="hero"><p class="kicker">Strade 2030 · Thinking of Campania</p><h1>I clan in cammino</h1>`;
+  const head = `<section class="hero"><p class="kicker">Strade 2030 · Thinking of Campania</p><h1>Le Comunità&nbsp;R/S in cammino</h1>`;
   if(S.gallery===null){ $("#app").innerHTML = head+`<p>Caricamento…</p></section>`; loadGallery(); return; }
   const rows=S.gallery;
   const zone=ZONE.filter(z=>rows.some(r=>r.zona===z));
-  $("#app").innerHTML = head+`<p>${rows.length} clan della Campania sulle strade dell'Agenda 2030.</p>
+  $("#app").innerHTML = head+`<p>${rows.length} Comunità R/S della Campania sulle strade dell'Agenda 2030.</p>
     ${zone.length>1?`<nav class="zone-nav">${zone.map(z=>`<a href="#zona-${esc(z)}">${esc(z)}</a>`).join("")}</nav>`:""}</section>
     ${rows.length? zone.map(z=>`<section class="zone-block" id="zona-${esc(z)}"><h2 class="zone-title">Zona ${esc(z)} <span>${rows.filter(r=>r.zona===z).length}</span></h2>
       <div class="gallery">${rows.filter(r=>r.zona===z).map(r=>{ const url=clanPhotoUrl(r.photo); const me=r.clan_id===uid();
       return `<article class="gcard${me?" me":""}">
-        <header><h3>${esc(r.name)}${r.grp?` <span>- ${esc(r.grp)}</span>`:""}</h3>${me?`<small>il vostro clan</small>`:""}</header>
-        ${url?`<img src="${esc(url)}" alt="Foto del ${esc(r.name)}" loading="lazy">`:`<div class="gph" aria-hidden="true">${esc(r.name.replace(/^clan\s+/i,"").slice(0,1).toUpperCase())}</div>`}
+        <header><h3>${esc(r.name)}${r.grp?` <span>- ${esc(r.grp)}</span>`:""}</h3>${me?`<small>la vostra Comunità R/S</small>`:""}</header>
+        ${url?`<img src="${esc(url)}" alt="Foto di ${esc(r.name)}" loading="lazy">`:`<div class="gph" aria-hidden="true">${esc(r.name.replace(/^(clan|noviziato)\s+/i,"").slice(0,1).toUpperCase())}</div>`}
         ${r.members?.length?`<p class="gmembers">${r.members.map(esc).join(" · ")}</p>`:""}
       </article>`; }).join("")}</div></section>`).join("")
-    :`<p class="muted" style="padding-bottom:60px">Ancora nessun clan iscritto.</p>`}`;
+    :`<p class="muted" style="padding-bottom:60px">Ancora nessuna Comunità R/S iscritta.</p>`}`;
   document.querySelectorAll(".zone-nav a").forEach(a=>a.onclick=e=>{ e.preventDefault(); document.getElementById(a.getAttribute("href").slice(1))?.scrollIntoView({behavior:"smooth"}); });
 }
 
@@ -664,12 +668,12 @@ function renderGallery(){
 let futurePick=null;
 function renderFuture(){
   const head = `<section class="hero"><p class="kicker">Thinking of Campania · Il domani è oggi</p><h1>I vostri obiettivi di futuro</h1>
-    <p>Dopo aver percorso le strade dell'Agenda 2030, ogni clan sceglie <b>3 obiettivi</b> su cui vorrebbe impegnarsi in futuro. La scelta nasce da ciò che avete scoperto con le sfide: non dovete lavorare su tutti e 3, ma indicare dove volete mettere le vostre energie. Potete cambiarli quando volete.</p></section>`;
+    <p>Dopo aver percorso le strade dell'Agenda 2030, ogni Comunità R/S sceglie <b>3 obiettivi</b> su cui vorrebbe impegnarsi in futuro. La scelta nasce da ciò che avete scoperto con le sfide: non dovete lavorare su tutti e 3, ma indicare dove volete mettere le vostre energie. Potete cambiarli quando volete.</p></section>`;
   if(S.scelte===null){ $("#app").innerHTML = head+`<p>Caricamento…</p>`; loadScelte(); return; }
   const clanRows=S.scelte.filter(r=>r.livello==="clan");
   const mine=clanRows.filter(r=>r.soggetto===uid());   // dal database arrivano solo le proprie
 
-  // Parte del clan
+  // Parte della Comunità R/S
   let mineHtml="";
   if(S.clan){
     const p=progress();
@@ -688,7 +692,7 @@ function renderFuture(){
     }
   }
 
-  const riservato = `<p class="muted small">Le scelte degli altri clan restano riservate: le scoprirete tutte insieme alla fine della sfida.</p>`;
+  const riservato = `<p class="muted small">Le scelte delle altre Comunità R/S restano riservate: le scoprirete tutte insieme alla fine della sfida.</p>`;
   $("#app").innerHTML = head + `<div class="stack" style="padding-bottom:60px">${levelsHtml()}${mineHtml}${riservato}${nextLevels()}</div>`;
 
   document.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{
@@ -710,10 +714,10 @@ function renderFuture(){
   };
 }
 
-/* Livelli: clan (ora), zona e Agorà regionale (dopo la sfida) */
+/* Livelli: Comunità R/S (ora), zona e Agorà regionale (dopo la sfida) */
 const LEVELS=[
-  {k:"clan", n:"1", t:"Thinking of Comunità", s:"I clan", d:"Ogni clan sceglie i 3 obiettivi di futuro per il suo territorio."},
-  {k:"zona", n:"2", t:"Thinking of Zona", s:"Agorà di Zona", d:"Ogni zona, partendo dalle scelte dei suoi clan, sceglierà i suoi 3 obiettivi."},
+  {k:"clan", n:"1", t:"Thinking of Comunità", s:"Le Comunità R/S", d:"Ogni Comunità R/S sceglie i 3 obiettivi di futuro per il suo territorio."},
+  {k:"zona", n:"2", t:"Thinking of Zona", s:"Agorà di Zona", d:"Ogni zona, partendo dalle scelte delle sue Comunità R/S, sceglierà i suoi 3 obiettivi."},
   {k:"regionale", n:"3", t:"Thinking of Campania", s:"Agorà regionale", d:"L'ultima tappa: all'Agorà la Campania sceglierà insieme i suoi 3 obiettivi."}];
 const levelOpen = k => k==="clan" || (S.scelte||[]).some(r=>r.livello===k);
 function levelsHtml(){
@@ -743,5 +747,5 @@ function renderRules(){
     <div class="panel"><span class="big">${LOCAL_MAX}</span><h3>Sfida locale</h3><p>3 prove sul vostro territorio, dalla più semplice alla più impegnativa, ${LOCAL_MAX/3} punti ciascuna. Potete farle tutte o solo alcune, anche in momenti diversi. Inviate il materiale per email a ${esc(CONSEGNA.email||"gli organizzatori")}; la commissione vota prova per prova.</p></div>
     <div class="panel"><span class="big">+${PTS_BONUS}</span><h3>Sfida completa</h3><p>Portate a termine tutte e 3 le prove di una sfida locale: ricevete ${PTS_BONUS} punti in più. Tre prove sullo stesso obiettivo valgono più di tre prove sparse.</p></div>
   </div>
-  <section class="panel" style="margin-bottom:60px"><h3>Obiettivi di futuro</h3><p>Quando avete risposto a tutte le 17 domande globali e a tutte le 17 domande campane, e avete consegnato almeno ${SBLOCCO_LOCALI===1?"una sfida locale":SBLOCCO_LOCALI+" sfide locali"}, si sblocca la pagina <b>Obiettivi di futuro</b>: lì il clan sceglie i 3 obiettivi su cui vuole impegnarsi, e può cambiarli quando vuole. Le scelte di tutti i clan restano riservate fino alla fine della sfida. Intanto la strada continua: scegliete le sfide locali che vi accendono il cuore e portatele fino in fondo.</p></section>`;
+  <section class="panel" style="margin-bottom:60px"><h3>Obiettivi di futuro</h3><p>Quando avete risposto a tutte le 17 domande globali e a tutte le 17 domande campane, e avete consegnato almeno ${SBLOCCO_LOCALI===1?"una sfida locale":SBLOCCO_LOCALI+" sfide locali"}, si sblocca la pagina <b>Obiettivi di futuro</b>: lì la Comunità R/S sceglie i 3 obiettivi su cui vuole impegnarsi, e può cambiarli quando vuole. Le scelte di tutte le Comunità R/S restano riservate fino alla fine della sfida. Intanto la strada continua: scegliete le sfide locali che vi accendono il cuore e portatele fino in fondo.</p></section>`;
 }
