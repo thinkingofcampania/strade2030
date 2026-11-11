@@ -215,3 +215,11 @@ Metti le 17 icone in `assets/img/sdg/` con i nomi `goal-1.png` ... `goal-17.png`
 - Registrazione e profilo: "Clan" e "Noviziato" li aggiunge il sito, i ragazzi scrivono solo il nome.
 - Pulsante "Perché giochiamo?": si muove e lampeggia finché la Comunità R/S non lo apre (il browser se lo ricorda).
 
+## Aggiornamento 11 · Messaggio per gli account eliminati
+
+**Database:** esegui `supabase/aggiornamento-10.sql`.
+
+- Quando la commissione elimina una Comunità R/S (scheda Comunità R/S > Elimina) può scrivere un motivo.
+- Chi prova a rientrare con quel codice vede: "Questo account è stato eliminato dalla commissione perché non valido (motivo). Se pensate sia un errore, scrivete a strade2030@gmail.com."
+- Vale per gli account eliminati da questo aggiornamento in poi. L'elenco è nella tabella `comunita_eliminate`.
+

@@ -426,10 +426,12 @@ async function eliminaClan(b){
   if(!confirm(`Eliminare definitivamente "${c.name}" (zona ${c.zona}, codice ${c.code})?\n\nSi cancellano anche le sue risposte (${risposte} campane), le sfide locali consegnate (${consegne}), le valutazioni, gli obiettivi di futuro e la foto. Non si può annullare.`)) return;
   const conferma=prompt(`Per confermare scrivi il codice della Comunità R/S: ${c.code}`);
   if((conferma||"").trim().toUpperCase()!==c.code.toUpperCase()) return toast("Eliminazione annullata: il codice non corrisponde.");
+  const motivo=prompt("Motivo (facoltativo, di solito lascia vuoto). Chi prova a entrare con questo account vedrà: «Questo account è stato eliminato dalla commissione perché non valido». Se scrivi qualcosa qui, compare tra parentesi dopo «non valido».","");
+  if(motivo===null) return toast("Eliminazione annullata.");
   b.disabled=true;
   if(c.photo){ try{ await sb.storage.from("clan").remove([c.photo]); }catch(e){} }
-  const { error } = await sb.rpc("elimina_clan",{ p_clan:id });
-  if(error){ b.disabled=false; console.error(error); return toast("Comunità R/S non eliminata. Hai eseguito l'aggiornamento 8 del database?"); }
+  const { error } = await sb.rpc("elimina_clan",{ p_clan:id, p_motivo: motivo.trim()||null });
+  if(error){ b.disabled=false; console.error(error); return toast("Comunità R/S non eliminata. Hai eseguito l'aggiornamento 10 del database?"); }
   toast(`${c.name} eliminato`);
   await loadAll();
 }

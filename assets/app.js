@@ -59,6 +59,10 @@ async function loadAll(){
   const bad=[c,a,ca,ce,s,e,st].find(r=>r.error);
   if(bad){ console.error(bad.error); toast("Problema di connessione: ricarica la pagina."); }
   S.clan = c.data || null;
+  if(!S.clan){   // account eliminato dalla commissione mentre era aperto
+    const el = await sb.rpc("mia_eliminazione");
+    if(!el.error && el.data){ await sb.auth.signOut(); S.session=null; S.authMode="login"; S.tab="map"; render(); return authError(msgEliminato(el.data)); }
+  }
   const byGoal = rows => Object.fromEntries((rows||[]).map(r=>[r.goal,r]));
   S.answers=byGoal(a.data); S.campane=byGoal(ca.data); S.campEvals=byGoal(ce.data);
   S.subs=byGoal(s.data); S.evals=byGoal(e.data);
@@ -192,6 +196,11 @@ function renderAuth(){
   document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{S.authMode=b.dataset.mode;renderAuth();});
   $("#authForm").addEventListener("submit", e=>{ e.preventDefault(); ({register:doRegister,login:doLogin,recover:doRecover})[m](e.submitter); });
 }
+/* Messaggio per chi prova a entrare con un account eliminato dalla commissione */
+function msgEliminato(motivo){
+  const m = String(motivo||"").trim();
+  return `Questo account è stato eliminato dalla commissione perché non valido${m && m.toLowerCase()!=="account non valido" ? ` (${m})` : ""}. Se pensate sia un errore, scrivete a ${CONSEGNA.email||"gli organizzatori"}.`;
+}
 function authError(msg){ const p=$("#authErr"); p.textContent=msg; p.classList.remove("hidden"); }
 
 function makeCode(name){
@@ -247,7 +256,12 @@ async function doLogin(btn){
   const code=$("#lCode").value, pw=$("#lPw").value;
   btn.disabled=true;
   const { data, error } = await sb.auth.signInWithPassword({ email: codeToEmail(code), password: pw });
-  if(error){ btn.disabled=false; return authError("Codice Comunità R/S o password non corretti."); }
+  if(error){
+    btn.disabled=false;
+    const el = await sb.rpc("stato_eliminazione",{ p_code: code.trim() });
+    if(!el.error && el.data) return authError(msgEliminato(el.data));
+    return authError("Codice Comunità R/S o password non corretti.");
+  }
   S.session=data.session; S.tab="map";
   await loadAll();
 }
